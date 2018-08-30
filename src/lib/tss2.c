@@ -42,12 +42,7 @@ static TSS2_TCTI_CONTEXT *tcti_context;
 TSS2_RC
 tss2_init_sys_context(void)
 {
-	TSS2_ABI_VERSION tss2_abi_version = {
-		TSSWG_INTEROP,
-		TSS_SAPI_FIRST_FAMILY,
-		TSS_SAPI_FIRST_LEVEL,
-		TSS_SAPI_FIRST_VERSION
-	};
+	TSS2_ABI_VERSION tss2_abi_version = TSS2_ABI_VERSION_CURRENT;
 	TSS2_SYS_CONTEXT *sys_context;
 	UINT32 size;
 	TSS2_RC rc;

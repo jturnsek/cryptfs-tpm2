@@ -81,7 +81,7 @@ print_verbose() {
 # Remove the sensitive passphrase in case accidentally terminated
 trap_handler() {
     print_verbose "Cleaning up ..."
-    [ $RESOURCEMGR_STARTED -eq 1 ] && pkill tpm2-abrmd
+    #[ $RESOURCEMGR_STARTED -eq 1 ] && pkill tpm2-abrmd
     [ -n "$TEMP_DIR" ] && rm -rf "$TEMP_DIR"
     unset TPM2TOOLS_DEVICE_FILE TPM2TOOLS_TCTI_NAME TSS2_TCTI
 }
@@ -95,14 +95,11 @@ detect_tpm() {
     local tpm_absent=1
     local dev=""
     for dev in $tpm_devices; do
-        grep -q "TCG version: 1.2" "/sys/class/tpm/$dev/device/caps" 2>/dev/null &&
-            print_warning "TPM 1.2 device is not supported" && break
-
-        grep -q "TPM 2.0 Device" "/sys/class/tpm/$dev/device/description" 2>/dev/null &&
+        grep -q "slb9670" "/sys/class/tpm/$dev/device/modalias" 2>/dev/null &&
             tpm_absent=0 && break
     done
 
-    [ $tpm_absent -eq 1 ] && print_info "No TPM device found" && return 1
+    [ $tpm_absent -eq 1 ] && print_info "No TPM2.0 device found" && return 1
 
     pgrep tpm2-abrmd >/dev/null
     [ $? -ne 0 ] && {
@@ -132,13 +129,13 @@ unseal_passphrase() {
     fi
 
     if [ $err -eq 0 ]; then
-        ! cryptfs-tpm2 -q unseal passphrase -P auto -o "$passphrase" &&
+        ! cryptfs-tpm2 -q unseal passphrase -o "$passphrase" &&
 	    print_error "Unable to unseal the passphrase" && return 1
     else
 	print_error "Unable to contact the resource manager" && return 1
     fi
 
-    [ $RESOURCEMGR_STARTED -eq 1 ] && pkill tpm2-abrmd
+    #[ $RESOURCEMGR_STARTED -eq 1 ] && pkill tpm2-abrmd
 
     return 0
 }
@@ -157,13 +154,13 @@ create_luks_partition() {
     print_info "Creating the LUKS partition $luks_name ..."
 
     if [ "$tpm_absent" = "0" ]; then
-        ! cryptfs-tpm2 -q unseal passphrase -P auto -o "$tmp_dir/passphrase" &&
+        ! cryptfs-tpm2 -q unseal passphrase -o "$tmp_dir/passphrase" &&
             print_error "Unable to unseal the passphrase" && return 1
 
         passphrase="$tmp_dir/passphrase"
     fi
 
-    ! cryptsetup --type luks --cipher aes-xts-plain --hash sha256 \
+    ! cryptsetup --batch-mode --type luks --cipher aes-xts-plain --hash sha256 \
         --use-random --key-file "$passphrase" luksFormat "$luks_dev" &&
         print_error "Unable to create the LUKS partition on $luks_dev" &&
         return 1
@@ -381,15 +378,15 @@ print_critical "Make sure you know what to do before confirming current operatio
 print_critical "******************************************************************"
 echo
 
-read -p "Do you wish to continue? [y/n] " -n 1
-echo
+#read -p "Do you wish to continue? [y/n] " -n 1
+#echo
 
-if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    print_info "Installation cancelled"
-    exit 0
-else
+#if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+#    print_info "Installation cancelled"
+#    exit 0
+#else
     print_info "Installation confirmed"
-fi
+#fi
 
 if [ $OPT_NO_TPM -eq 0 ]; then
     detect_tpm
@@ -416,7 +413,7 @@ if [ $OPT_NO_TPM -eq 0 ]; then
                 exit 1
             fi
 
-            ! cryptfs-tpm2 -q seal all -P auto &&
+            ! cryptfs-tpm2 -q seal all &&
                 print_error "Unable to create the primary key and passphrase" &&
                 exit 1
         fi

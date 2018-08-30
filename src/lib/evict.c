@@ -53,13 +53,13 @@ redo:
 	rc = Tss2_Sys_EvictControl(cryptfs_tpm2_sys_context, TPM_RH_OWNER,
 				   obj_handle, &s.sessionsData, persist_handle,
 				   &s.sessionsDataOut);
-	if (rc != TPM_RC_SUCCESS) {
-		if (rc == TPM_RC_LOCKOUT) {
+	if (rc != TPM2_RC_SUCCESS) {
+		if (rc == TPM2_RC_LOCKOUT) {
 			if (da_reset() == EXIT_SUCCESS)
 				goto redo;
 		} else if (tpm2_rc_is_format_one(rc) &&
 			   (tpm2_rc_get_code_7bit(rc) | RC_FMT1) ==
-			   TPM_RC_BAD_AUTH) {
+			   TPM2_RC_BAD_AUTH) {
 			owner_auth_size = sizeof(owner_auth);
 
 			if (cryptfs_tpm2_util_get_owner_auth(owner_auth,

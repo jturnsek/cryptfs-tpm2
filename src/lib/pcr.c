@@ -57,7 +57,7 @@ cryptfs_tpm2_read_pcr(TPMI_ALG_HASH bank_alg, unsigned int index,
 	rc = Tss2_Sys_PCR_Read(cryptfs_tpm2_sys_context, NULL, &pcrs,
 			       &pcr_update_counter, &pcrs_out, &pcr_digest,
 			       NULL);
-	if (rc != TPM_RC_SUCCESS) {
+	if (rc != TPM2_RC_SUCCESS) {
 		err("Unable to read the PCR (%#x)\n", rc);
 		return -1;
 	}

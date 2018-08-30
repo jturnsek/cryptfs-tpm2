@@ -54,7 +54,7 @@ tpm_hash(TPMI_ALG_HASH hash_alg, BYTE *data, UINT16 data_len,
 	UINT32 rc = Tss2_Sys_Hash(cryptfs_tpm2_sys_context, NULL, &data_buf,
 				  hash_alg, TPM_RH_NULL, &digest, NULL,
 				  NULL);
-	if (rc != TPM_RC_SUCCESS) {
+	if (rc != TPM2_RC_SUCCESS) {
 		err("Unable to calculate the digest (%#x)\n", rc);
 		return -1;
 	}

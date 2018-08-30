@@ -39,7 +39,7 @@ int
 cryptefs_tpm2_get_random(uint8_t *random, size_t *req_size)
 {
 	TPM2B_DIGEST random_bytes = { { sizeof(TPM2B_DIGEST) - 2, } };
-	TPM_RC rc;
+	TPM2_RC rc;
 
 	rc = Tss2_Sys_GetRandom(cryptfs_tpm2_sys_context, NULL, *req_size,
 				&random_bytes, NULL);

@@ -52,7 +52,7 @@ capability_read_public(TPMI_DH_OBJECT handle, TPM2B_PUBLIC *public_out)
 					   TPM_CAP_HANDLES, TPM_HT_PERSISTENT,
           				   TPM_PT_HR_PERSISTENT, &more_data,
 					   &capability_data, NULL);
-	if (rc != TPM_RC_SUCCESS) {
+	if (rc != TPM2_RC_SUCCESS) {
 		err("Unable to get the TPM persistent handles (%#x)", rc);
 		return -1;
 	};
@@ -76,7 +76,7 @@ capability_read_public(TPMI_DH_OBJECT handle, TPM2B_PUBLIC *public_out)
 		rc = Tss2_Sys_ReadPublic(cryptfs_tpm2_sys_context, handle,
 					 NULL, public_out, &name,
 					 &qualified_name, &s.sessionsDataOut);
-		if (rc != TPM_RC_SUCCESS) {
+		if (rc != TPM2_RC_SUCCESS) {
 			err("Unable to read the public area for the "
 			    "persistent handle %#8.8x (%#x)", handle, rc);
 			return -1;
@@ -244,7 +244,7 @@ cryptfs_tpm2_capability_digest_algorithm_supported(TPMI_ALG_HASH *hash_alg)
 	rc = Tss2_Sys_GetCapability(cryptfs_tpm2_sys_context, NULL,
 				    TPM_CAP_ALGS, TPM_PT_NONE, 1, &more_data,
 				    &capability_data, NULL);
-	if (rc != TPM_RC_SUCCESS) {
+	if (rc != TPM2_RC_SUCCESS) {
 		err("Unable to get the TPM supported algorithms (%#x)", rc);
 		return false;
 	};
@@ -303,7 +303,7 @@ cryptfs_tpm2_capability_pcr_bank_supported(TPMI_ALG_HASH *hash_alg)
 	rc = Tss2_Sys_GetCapability(cryptfs_tpm2_sys_context, NULL,
 				    TPM_CAP_PCRS, TPM_PT_NONE, 1, &more_data,
 				    &capability_data, NULL);
-	if (rc != TPM_RC_SUCCESS) {
+	if (rc != TPM2_RC_SUCCESS) {
 		err("Unable to get the TPM PCR banks (%#x)", rc);
 		return false;
 	}
@@ -347,7 +347,7 @@ cryptfs_tpm2_capability_pcr_bank_supported(TPMI_ALG_HASH *hash_alg)
 		rc = cryptfs_tpm2_read_pcr(bank_alg,
 					   CRYPTFS_TPM2_PCR_INDEX,
 					   pcr_value);
-		if (rc != TPM_RC_SUCCESS)
+		if (rc != TPM2_RC_SUCCESS)
 			continue;
 
 		if (is_null_hash(pcr_value, alg_size)) {
@@ -387,7 +387,7 @@ get_permanent_property(TPM_PT property, UINT32 *value)
 				    TPM_CAP_TPM_PROPERTIES, property,
 				    1, &more_data,
 				    &capability_data, NULL);
-	if (rc != TPM_RC_SUCCESS) {
+	if (rc != TPM2_RC_SUCCESS) {
 		err("Unable to get the TPM properties (%#x)", rc);
 		return rc;
 	}
@@ -408,7 +408,7 @@ get_permanent_property(TPM_PT property, UINT32 *value)
 
 	*value = tagged_property->value;
 
-	return TPM_RC_SUCCESS;
+	return TPM2_RC_SUCCESS;
 }
 
 int
@@ -421,7 +421,7 @@ cryptfs_tpm2_capability_in_lockout(bool *in_lockout)
 	UINT32 rc;
 
 	rc = get_permanent_property(TPM_PT_PERMANENT, (UINT32 *)&attrs);
-	if (rc == TPM_RC_SUCCESS) {
+	if (rc == TPM2_RC_SUCCESS) {
 		*in_lockout = !!attrs.inLockout;
 		return EXIT_SUCCESS;
 	}
@@ -439,7 +439,7 @@ cryptfs_tpm2_capability_lockout_auth_required(bool *required)
 	UINT32 rc;
 
 	rc = get_permanent_property(TPM_PT_PERMANENT, (UINT32 *)&attrs);
-	if (rc == TPM_RC_SUCCESS) {
+	if (rc == TPM2_RC_SUCCESS) {
 		*required = !!attrs.lockoutAuthSet;
 		return EXIT_SUCCESS;
 	}
@@ -457,7 +457,7 @@ cryptfs_tpm2_capability_owner_auth_required(bool *required)
 	UINT32 rc;
 
 	rc = get_permanent_property(TPM_PT_PERMANENT, (UINT32 *)&attrs);
-	if (rc == TPM_RC_SUCCESS) {
+	if (rc == TPM2_RC_SUCCESS) {
 		*required = !!attrs.ownerAuthSet;
 		return EXIT_SUCCESS;
 	}
@@ -476,7 +476,7 @@ cryptfs_tpm2_capability_da_disabled(bool *disabled)
 
 	rc = get_permanent_property(TPM_PT_LOCKOUT_INTERVAL,
 				    &recovery_time);
-	if (rc == TPM_RC_SUCCESS) {
+	if (rc == TPM2_RC_SUCCESS) {
 		bool enforced;
 
 		rc = cryptfs_tpm2_capability_lockout_enforced(&enforced);
@@ -518,7 +518,7 @@ cryptfs_tpm2_capability_get_lockout_counter(UINT32 *counter)
 
 	rc = get_permanent_property(TPM_PT_LOCKOUT_COUNTER,
 				    counter);
-	if (rc == TPM_RC_SUCCESS)
+	if (rc == TPM2_RC_SUCCESS)
 		return EXIT_SUCCESS;
 
 	return EXIT_FAILURE;
@@ -534,7 +534,7 @@ cryptfs_tpm2_capability_get_max_tries(UINT32 *max_tries)
 
 	rc = get_permanent_property(TPM_PT_MAX_AUTH_FAIL,
 				    max_tries);
-	if (rc == TPM_RC_SUCCESS)
+	if (rc == TPM2_RC_SUCCESS)
 		return EXIT_SUCCESS;
 
 	return EXIT_FAILURE;
@@ -550,7 +550,7 @@ cryptfs_tpm2_capability_get_lockout_recovery(UINT32 *recovery)
 
 	rc = get_permanent_property(TPM_PT_LOCKOUT_RECOVERY,
 				    recovery);
-	if (rc == TPM_RC_SUCCESS)
+	if (rc == TPM2_RC_SUCCESS)
 		return EXIT_SUCCESS;
 
 	return EXIT_FAILURE;

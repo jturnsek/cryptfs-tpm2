@@ -89,15 +89,15 @@ redo:
 			     &s.sessionsData, &out_data,
 			     &s.sessionsDataOut);
 	policy_session_destroy(&s);
-	if (rc != TPM_RC_SUCCESS) {
-		if (rc == TPM_RC_LOCKOUT) {
+	if (rc != TPM2_RC_SUCCESS) {
+		if (rc == TPM2_RC_LOCKOUT) {
 			if (da_reset() == EXIT_SUCCESS)
 				goto redo;
 		} else if (tpm2_rc_is_format_one(rc) &&
 			   (((tpm2_rc_get_code_7bit(rc) | RC_FMT1) ==
-			   TPM_RC_BAD_AUTH) ||
+			   TPM2_RC_BAD_AUTH) ||
 			   ((tpm2_rc_get_code_7bit(rc) | RC_FMT1) ==
-			   TPM_RC_AUTH_FAIL))) {
+			   TPM2_RC_AUTH_FAIL))) {
 			err("Wrong passphrase secret specified\n");
 
 			secret_size = sizeof(secret);

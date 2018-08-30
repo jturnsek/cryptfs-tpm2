@@ -61,7 +61,7 @@ calc_policy_digest(TPML_PCR_SELECTION *pcrs, TPMI_ALG_HASH policy_digest_alg,
 					     s.session_handle, NULL,
 					     policy_digest, NULL);
 	policy_session_destroy(&s);
-	if (rc != TPM_RC_SUCCESS) {
+	if (rc != TPM2_RC_SUCCESS) {
 		err("Unable to get the policy digest (%#x)\n", rc);
 		return -1;
 	}
@@ -243,13 +243,13 @@ redo:
 				    &creation_data, &creation_hash,
 				    &creation_ticket, &out_name,
 				    &s.sessionsDataOut);
-	if (rc != TPM_RC_SUCCESS) {
-		if (rc == TPM_RC_LOCKOUT) {
+	if (rc != TPM2_RC_SUCCESS) {
+		if (rc == TPM2_RC_LOCKOUT) {
 			if (da_reset() == EXIT_SUCCESS)
 				goto redo;
 		} else if (tpm2_rc_is_format_one(rc) &&
 			   (tpm2_rc_get_code_7bit(rc) | RC_FMT1) ==
-			   TPM_RC_BAD_AUTH) {
+			   TPM2_RC_BAD_AUTH) {
 			owner_auth_size = sizeof(owner_auth);
 
 			if (cryptfs_tpm2_util_get_owner_auth(owner_auth,
@@ -273,7 +273,7 @@ redo:
 	dbg("Preparing to persist the primary key object ...\n");
 
 	rc = cryptfs_tpm2_persist_primary_key(obj_handle);
-	if (rc != TPM_RC_SUCCESS) {
+	if (rc != TPM2_RC_SUCCESS) {
         	err("Unable to persist the primary key\n");
 		return -1;
 	}
@@ -323,12 +323,12 @@ cryptfs_tpm2_create_passphrase(char *passphrase, size_t passphrase_size,
 	if (!passphrase_size) {
 		/*
 		 * The sealed data (decrypt == 0 and sign == 0) must not
-		 * be empty otherwise TPM_RC_ATTRIBUTES will be returned.
+		 * be empty otherwise TPM2_RC_ATTRIBUTES will be returned.
 		 */
 		passphrase_size = CRYPTFS_TPM2_PASSPHRASE_MAX_SIZE;
 		rc = cryptefs_tpm2_get_random((uint8_t *)fixed_passphrase,
 					      &passphrase_size);
-		if (rc != TPM_RC_SUCCESS || !passphrase_size) {
+		if (rc != TPM2_RC_SUCCESS || !passphrase_size) {
 			err("Unable to generate random for passphrase "
 			    "(%#x)\n", rc);
 			return -1;
@@ -379,15 +379,15 @@ redo:
 			     &out_private, &out_public, &creation_data,
 			     &creation_hash, &creation_ticket,
 			     &s.sessionsDataOut);
-	if (rc != TPM_RC_SUCCESS) {
-		if (rc == TPM_RC_LOCKOUT) {
+	if (rc != TPM2_RC_SUCCESS) {
+		if (rc == TPM2_RC_LOCKOUT) {
 			if (da_reset() == EXIT_SUCCESS)
 				goto re_auth_pkey;
 		} else if (tpm2_rc_is_format_one(rc) &&
 			   (((tpm2_rc_get_code_7bit(rc) | RC_FMT1) ==
-			   TPM_RC_BAD_AUTH) ||
+			   TPM2_RC_BAD_AUTH) ||
 			   ((tpm2_rc_get_code_7bit(rc) | RC_FMT1) ==
-			   TPM_RC_AUTH_FAIL))) {
+			   TPM2_RC_AUTH_FAIL))) {
 			err("Wrong primary key secret specified\n");
 
 			secret_size = sizeof(secret);
@@ -411,16 +411,16 @@ redo:
 			   CRYPTFS_TPM2_PRIMARY_KEY_HANDLE, &s.sessionsData,
 			   &out_private, &out_public, &obj_handle, &name_ext,
 			   &s.sessionsDataOut);
-	if (rc != TPM_RC_SUCCESS) {
+	if (rc != TPM2_RC_SUCCESS) {
         	err("Unable to load the passphrase object (%#x)\n", rc);
 		return -1;
 	}
 
 	dbg("Preparing to persiste the passphrase object ...\n");
 
-	/* XXX: check whether already persisted. TPM_RC_NV_DEFINED (0x14c) */
+	/* XXX: check whether already persisted. TPM2_RC_NV_DEFINED (0x14c) */
 	rc = cryptfs_tpm2_persist_passphrase(obj_handle);
-	if (rc != TPM_RC_SUCCESS) {
+	if (rc != TPM2_RC_SUCCESS) {
 		err("Unable to persist the passphrase object\n");
 		return -1;
 	}

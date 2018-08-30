@@ -79,7 +79,7 @@ extend_pcr_policy_digest(TPMI_DH_OBJECT session_handle,
 	UINT32 rc = Tss2_Sys_PCR_Read(cryptfs_tpm2_sys_context, NULL, pcrs,
 				      &pcr_update_counter, &pcrs_out,
 				      pcr_digests, NULL);
-	if (rc != TPM_RC_SUCCESS) {
+	if (rc != TPM2_RC_SUCCESS) {
 		err("Unable to read the PCRs (%#x)\n", rc);
 		return -1;
 	}
@@ -143,7 +143,7 @@ extend_pcr_policy_digest(TPMI_DH_OBJECT session_handle,
 
 	rc = Tss2_Sys_PolicyPCR(cryptfs_tpm2_sys_context, session_handle,
                                 NULL, &digest_tpm, &pcrs_out, NULL);
-	if (rc != TPM_RC_SUCCESS) {
+	if (rc != TPM2_RC_SUCCESS) {
 		err("Unable to set the policy for PCRs (%#x)\n", rc);
 		return -1;
 	}
@@ -164,7 +164,7 @@ password_policy_extend(TPMI_DH_OBJECT session_handle)
 {
 	UINT32 rc = Tss2_Sys_PolicyPassword(cryptfs_tpm2_sys_context,
 					    session_handle, NULL, NULL);
-	if (rc != TPM_RC_SUCCESS) {
+	if (rc != TPM2_RC_SUCCESS) {
 		err("Unable to set the policy for password (%#x)\n", rc);
 		return -1;
 	}

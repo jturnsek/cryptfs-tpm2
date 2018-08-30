@@ -55,8 +55,8 @@ clear_lockout(const char *lockout_auth)
 						TPM_RH_LOCKOUT,
 						&s.sessionsData,
 						&s.sessionsDataOut);
-        if (rc != TPM_RC_SUCCESS) {
-		if (rc == TPM_RC_LOCKOUT) {
+        if (rc != TPM2_RC_SUCCESS) {
+		if (rc == TPM2_RC_LOCKOUT) {
 			/*
 			 * XXX: recover this sort of lockout via lockoutAuth
 			 * policy.

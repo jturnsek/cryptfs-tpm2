@@ -247,7 +247,7 @@ tpm2_rc_get_session_number (TPM2_RC response_code)
 static inline UINT32
 tpm2_rc_get_layer (TPM2_RC response_code)
 {
-    return TSS2_ERROR_LEVEL_MASK & response_code;
+    return TSS2_RC_LAYER_MASK & response_code;
 }
 /* This function returns true if the error code indicates that it came from a
  * TSS component. False otherwise (which indicates it came from the TPM).

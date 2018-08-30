@@ -42,12 +42,10 @@ struct session_complex {
 	TPMI_SH_AUTH_SESSION session_handle;
 
 	TPMS_AUTH_COMMAND sessionData;
-	TPMS_AUTH_COMMAND *sessionDataArray[1];
-	TSS2_SYS_CMD_AUTHS sessionsData;
+	TSS2L_SYS_AUTH_COMMAND  sessionsData;
 
 	TPMS_AUTH_RESPONSE sessionDataOut;
-	TPMS_AUTH_RESPONSE *sessionDataOutArray[1];
-	TSS2_SYS_RSP_AUTHS sessionsDataOut;
+	TSS2L_SYS_AUTH_RESPONSE sessionsDataOut;
 };
 
 extern TSS2_SYS_CONTEXT *cryptfs_tpm2_sys_context;
@@ -66,7 +64,7 @@ password_session_create(struct session_complex *s, char *auth_password,
 			unsigned int auth_password_size);
 
 int
-policy_session_create(struct session_complex *s, TPM_SE type,
+policy_session_create(struct session_complex *s, TPM2_SE type,
                       TPMI_ALG_HASH hash_alg);
 
 void

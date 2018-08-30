@@ -50,7 +50,7 @@ redo:
 	if (pcr_bank_alg != TPM_ALG_NULL) {
 		TPMI_ALG_HASH policy_digest_alg = pcr_bank_alg;
 
-		if (policy_session_create(&s, TPM_SE_POLICY, policy_digest_alg))
+		if (policy_session_create(&s, TPM2_SE_POLICY, policy_digest_alg))
 			return -1;
 
 		TPML_PCR_SELECTION pcrs;

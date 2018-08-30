@@ -44,7 +44,7 @@ calc_policy_digest(TPML_PCR_SELECTION *pcrs, TPMI_ALG_HASH policy_digest_alg,
 
 	struct session_complex s;
 
-	if (policy_session_create(&s, TPM_SE_TRIAL, policy_digest_alg))
+	if (policy_session_create(&s, TPM2_SE_TRIAL, policy_digest_alg))
 		return -1;
 
 	if (pcr_policy_extend(s.session_handle, pcrs, policy_digest_alg)) {

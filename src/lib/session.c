@@ -38,13 +38,11 @@
 static void
 complete_session_complex(struct session_complex *s)
 {
-	s->sessionDataArray[0] = &s->sessionData;
-	s->sessionsData.cmdAuthsCount = 1;
-	s->sessionsData.cmdAuths = s->sessionDataArray;
+	s->sessionsData.count = 1;
+	s->sessionsData.auths[0] = s->sessionData;
 
-	s->sessionDataOutArray[0] = &s->sessionDataOut;
-	s->sessionsDataOut.rspAuthsCount = 1;
-	s->sessionsDataOut.rspAuths = s->sessionDataOutArray;
+	s->sessionsDataOut.count = 1;
+	s->sessionsDataOut.auths[0] = s->sessionDataOut;
 }
 
 static void
@@ -88,7 +86,7 @@ policy_auth_set(TPMS_AUTH_COMMAND *session, TPMI_SH_AUTH_SESSION handle,
  * the policy digest calculated by TPM.
  */
 int
-policy_session_create(struct session_complex *s, TPM_SE type,
+policy_session_create(struct session_complex *s, TPM2_SE type,
 		      TPMI_ALG_HASH hash_alg)
 {
 	UINT16 hash_alg_size;
@@ -96,7 +94,7 @@ policy_session_create(struct session_complex *s, TPM_SE type,
 	if (util_digest_size(hash_alg, &hash_alg_size))
 		return -1;
 
-	if (type != TPM_SE_POLICY && type != TPM_SE_TRIAL) {
+	if (type != TPM2_SE_POLICY && type != TPM2_SE_TRIAL) {
 		err("Invalid policy session type %#x specified\n", type);
 		return -1;
 	}
@@ -123,7 +121,7 @@ policy_session_create(struct session_complex *s, TPM_SE type,
 					      &nonce_tpm, NULL);
 	if (rc != TPM2_RC_SUCCESS) {
 		err("Unable to create a %spolicy session "
-		    "(%#x)\n", type == TPM_SE_TRIAL ? "trial " : "",
+		    "(%#x)\n", type == TPM2_SE_TRIAL ? "trial " : "",
 		    rc);
 		return -1;
 	}
@@ -131,7 +129,7 @@ policy_session_create(struct session_complex *s, TPM_SE type,
 	complete_session_complex(s);
 
 	dbg("The %spolicy session handle %#8.8x created\n",
-	    type == TPM_SE_TRIAL ? "trial " : "",
+	    type == TPM2_SE_TRIAL ? "trial " : "",
 	    s->session_handle);
 
 	return 0;

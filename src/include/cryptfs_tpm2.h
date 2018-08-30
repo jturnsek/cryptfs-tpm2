@@ -63,7 +63,7 @@
 
 #include <tss2/tss2_tcti_device.h>
 #include <tss2/tss2_tcti_mssim.h>
-#include <tss2/tss2_tcti_tabrmd.h>
+#include <tss2/tss2-tcti-tabrmd.h>
 
 #define stringify(x)			#x
 

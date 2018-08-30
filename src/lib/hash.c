@@ -67,7 +67,7 @@ tpm_hash(TPMI_ALG_HASH hash_alg, BYTE *data, UINT16 data_len,
 int
 sha1_digest(BYTE *data, UINT16 data_len, BYTE *hash)
 {
-	return tpm_hash(TPM_ALG_SHA1, data, data_len, hash, SHA1_DIGEST_SIZE);
+	return tpm_hash(TPM2_ALG_SHA1, data, data_len, hash, TPM2_SHA1_DIGEST_SIZE);
 }
 
 int

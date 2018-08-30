@@ -47,7 +47,7 @@ cryptfs_tpm2_unseal_passphrase(TPMI_ALG_HASH pcr_bank_alg, void **passphrase,
 	get_passphrase_secret(secret, &secret_size);
 
 redo:
-	if (pcr_bank_alg != TPM_ALG_NULL) {
+	if (pcr_bank_alg != TPM2_ALG_NULL) {
 		TPMI_ALG_HASH policy_digest_alg = pcr_bank_alg;
 
 		if (policy_session_create(&s, TPM2_SE_POLICY, policy_digest_alg))

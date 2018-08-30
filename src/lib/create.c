@@ -75,12 +75,12 @@ set_public(TPMI_ALG_PUBLIC type, TPMI_ALG_HASH name_alg, int set_key,
 	   TPM2B_DIGEST *policy_digest)
 {
 	switch (name_alg) {
-	case TPM_ALG_SHA1:
-	case TPM_ALG_SHA256:
-	case TPM_ALG_SHA384:
-	case TPM_ALG_SHA512:
-	case TPM_ALG_SM3_256:
-	case TPM_ALG_NULL:
+	case TPM2_ALG_SHA1:
+	case TPM2_ALG_SHA256:
+	case TPM2_ALG_SHA384:
+	case TPM2_ALG_SHA512:
+	case TPM2_ALG_SM3_256:
+	case TPM2_ALG_NULL:
 		inPublic->t.publicArea.nameAlg = name_alg;
 		break;
 	default:
@@ -122,43 +122,43 @@ set_public(TPMI_ALG_PUBLIC type, TPMI_ALG_HASH name_alg, int set_key,
 		inPublic->t.publicArea.authPolicy.t.size = 0;
 
 	switch (type) {
-	case TPM_ALG_RSA:
-		inPublic->t.publicArea.parameters.rsaDetail.symmetric.algorithm = TPM_ALG_AES;
+	case TPM2_ALG_RSA:
+		inPublic->t.publicArea.parameters.rsaDetail.symmetric.algorithm = TPM2_ALG_AES;
 		inPublic->t.publicArea.parameters.rsaDetail.symmetric.keyBits.aes = 128;
-		inPublic->t.publicArea.parameters.rsaDetail.symmetric.mode.aes = TPM_ALG_CFB;
-		inPublic->t.publicArea.parameters.rsaDetail.scheme.scheme = TPM_ALG_NULL;
+		inPublic->t.publicArea.parameters.rsaDetail.symmetric.mode.aes = TPM2_ALG_CFB;
+		inPublic->t.publicArea.parameters.rsaDetail.scheme.scheme = TPM2_ALG_NULL;
 		inPublic->t.publicArea.parameters.rsaDetail.keyBits = 2048;
 		inPublic->t.publicArea.parameters.rsaDetail.exponent = 0;
 		inPublic->t.publicArea.unique.rsa.t.size = 0;
 		break;
-	case TPM_ALG_KEYEDHASH:
+	case TPM2_ALG_KEYEDHASH:
 		if (!set_key) {
 			/* Always used for sealed data */
 			inPublic->t.publicArea.objectAttributes.sign = 0;
 			inPublic->t.publicArea.objectAttributes.restricted = 0;
 			inPublic->t.publicArea.objectAttributes.decrypt = 0;
-			inPublic->t.publicArea.parameters.keyedHashDetail.scheme.scheme = TPM_ALG_NULL;
+			inPublic->t.publicArea.parameters.keyedHashDetail.scheme.scheme = TPM2_ALG_NULL;
 		} else {
-			inPublic->t.publicArea.parameters.keyedHashDetail.scheme.scheme = TPM_ALG_XOR;
-			inPublic->t.publicArea.parameters.keyedHashDetail.scheme.details.exclusiveOr.hashAlg = TPM_ALG_SHA256;
-			inPublic->t.publicArea.parameters.keyedHashDetail.scheme.details.exclusiveOr.kdf = TPM_ALG_KDF1_SP800_108;
+			inPublic->t.publicArea.parameters.keyedHashDetail.scheme.scheme = TPM2_ALG_XOR;
+			inPublic->t.publicArea.parameters.keyedHashDetail.scheme.details.exclusiveOr.hashAlg = TPM2_ALG_SHA256;
+			inPublic->t.publicArea.parameters.keyedHashDetail.scheme.details.exclusiveOr.kdf = TPM2_ALG_KDF1_SP800_108;
 		}
 		inPublic->t.publicArea.unique.keyedHash.t.size = 0;
 		break;
-	case TPM_ALG_ECC:
-		inPublic->t.publicArea.parameters.eccDetail.symmetric.algorithm = TPM_ALG_AES;
+	case TPM2_ALG_ECC:
+		inPublic->t.publicArea.parameters.eccDetail.symmetric.algorithm = TPM2_ALG_AES;
 		inPublic->t.publicArea.parameters.eccDetail.symmetric.keyBits.aes = 128;
-		inPublic->t.publicArea.parameters.eccDetail.symmetric.mode.sym = TPM_ALG_CFB;
-		inPublic->t.publicArea.parameters.eccDetail.scheme.scheme = TPM_ALG_NULL;
+		inPublic->t.publicArea.parameters.eccDetail.symmetric.mode.sym = TPM2_ALG_CFB;
+		inPublic->t.publicArea.parameters.eccDetail.scheme.scheme = TPM2_ALG_NULL;
 		inPublic->t.publicArea.parameters.eccDetail.curveID = TPM_ECC_NIST_P256;
-		inPublic->t.publicArea.parameters.eccDetail.kdf.scheme = TPM_ALG_NULL;
+		inPublic->t.publicArea.parameters.eccDetail.kdf.scheme = TPM2_ALG_NULL;
 		inPublic->t.publicArea.unique.ecc.x.t.size = 0;
 		inPublic->t.publicArea.unique.ecc.y.t.size = 0;
 		break;
-	case TPM_ALG_SYMCIPHER:
-		inPublic->t.publicArea.parameters.symDetail.sym.algorithm = TPM_ALG_AES;
+	case TPM2_ALG_SYMCIPHER:
+		inPublic->t.publicArea.parameters.symDetail.sym.algorithm = TPM2_ALG_AES;
 		inPublic->t.publicArea.parameters.symDetail.sym.keyBits.sym = 128;
-		inPublic->t.publicArea.parameters.symDetail.sym.mode.sym = TPM_ALG_CFB;
+		inPublic->t.publicArea.parameters.symDetail.sym.mode.sym = TPM2_ALG_CFB;
 		inPublic->t.publicArea.unique.sym.t.size = 0;
 		break;
 	default:
@@ -176,7 +176,7 @@ cryptfs_tpm2_create_primary_key(TPMI_ALG_HASH pcr_bank_alg)
 	TPM2B_DIGEST policy_digest;
 	TPMI_ALG_HASH name_alg;
 
-	if (pcr_bank_alg != TPM_ALG_NULL) {
+	if (pcr_bank_alg != TPM2_ALG_NULL) {
 		unsigned int pcr_index = CRYPTFS_TPM2_PCR_INDEX;
 
 		creation_pcrs.count = 1;
@@ -196,11 +196,11 @@ cryptfs_tpm2_create_primary_key(TPMI_ALG_HASH pcr_bank_alg)
 	} else {
 		creation_pcrs.count = 0;
 		policy_digest.t.size = 0;
-		name_alg = TPM_ALG_SHA1;
+		name_alg = TPM2_ALG_SHA1;
 	}
 
 	TPM2B_PUBLIC in_public;
-	if (set_public(TPM_ALG_RSA, name_alg, 1, 0, &in_public,
+	if (set_public(TPM2_ALG_RSA, name_alg, 1, 0, &in_public,
 		       &policy_digest))
 		return -1;
 
@@ -293,7 +293,7 @@ cryptfs_tpm2_create_passphrase(char *passphrase, size_t passphrase_size,
 	TPMI_ALG_HASH name_alg;
 	char fixed_passphrase[CRYPTFS_TPM2_PASSPHRASE_MAX_SIZE];
 
-	if (pcr_bank_alg != TPM_ALG_NULL) {
+	if (pcr_bank_alg != TPM2_ALG_NULL) {
 		unsigned int pcr_index = CRYPTFS_TPM2_PCR_INDEX;
 
 		creation_pcrs.count = 1;
@@ -313,7 +313,7 @@ cryptfs_tpm2_create_passphrase(char *passphrase, size_t passphrase_size,
 	} else {
 		creation_pcrs.count = 0;
 		policy_digest.t.size = 0;
-		name_alg = TPM_ALG_SHA1;
+		name_alg = TPM2_ALG_SHA1;
 	}
 
 	UINT32 rc;
@@ -339,7 +339,7 @@ cryptfs_tpm2_create_passphrase(char *passphrase, size_t passphrase_size,
 
 	TPM2B_PUBLIC in_public;
 
-	if (set_public(TPM_ALG_KEYEDHASH, name_alg, 0, passphrase_size,
+	if (set_public(TPM2_ALG_KEYEDHASH, name_alg, 0, passphrase_size,
 		       &in_public, &policy_digest))
 		return -1;
 

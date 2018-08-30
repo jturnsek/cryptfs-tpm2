@@ -104,7 +104,7 @@ policy_session_create(struct session_complex *s, TPM2_SE type,
 
 	/* No symmetric algorithm */
 	TPMT_SYM_DEF symmetric;
-	symmetric.algorithm = TPM_ALG_NULL;
+	symmetric.algorithm = TPM2_ALG_NULL;
 
 	TPM2B_NONCE nonce_caller;
 	nonce_caller.t.size = hash_alg_size;

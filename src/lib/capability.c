@@ -93,32 +93,32 @@ weight_digest_algorithm(TPMI_ALG_HASH hash_alg)
 {
 	digest_alg_weight_t alg_list[] = {
 		{
-			TPM_ALG_SHA1,
-			SHA1_DIGEST_SIZE
+			TPM2_ALG_SHA1,
+			TPM2_SHA1_DIGEST_SIZE
 		},
 		{
-			TPM_ALG_SHA256,
-			SHA256_DIGEST_SIZE
+			TPM2_ALG_SHA256,
+			TPM2_SHA256_DIGEST_SIZE
 		},
 		{
-			TPM_ALG_SHA384,
-			SHA384_DIGEST_SIZE
+			TPM2_ALG_SHA384,
+			TPM2_SHA384_DIGEST_SIZE
 		},
 		{
-			TPM_ALG_SHA512,
-			SHA512_DIGEST_SIZE
+			TPM2_ALG_SHA512,
+			TPM2_SHA512_DIGEST_SIZE
 		},
 		{
-			TPM_ALG_SM3_256,
-			SM3_256_DIGEST_SIZE + 5
+			TPM2_ALG_SM3_256,
+			TPM2_SM3_256_DIGEST_SIZE + 5
 		},
 		{
-			TPM_ALG_NULL,
+			TPM2_ALG_NULL,
 			0
 		}
 	};
 
-	for (unsigned int i = 0; alg_list[i].alg != TPM_ALG_NULL; ++i) {
+	for (unsigned int i = 0; alg_list[i].alg != TPM2_ALG_NULL; ++i) {
 		if (hash_alg == alg_list[i].alg)
 			return alg_list[i].weight;
 	}
@@ -130,17 +130,17 @@ static unsigned int
 digest_algorithm_base_weight(TPMI_ALG_HASH hash_alg)
 {
 	switch (hash_alg) {
-	case TPM_ALG_SHA1:
+	case TPM2_ALG_SHA1:
 		return 1;
-	case TPM_ALG_SHA256:
+	case TPM2_ALG_SHA256:
 		return 2;
-	case TPM_ALG_SM3_256:
+	case TPM2_ALG_SM3_256:
 		return 3;
-	case TPM_ALG_SHA384:
+	case TPM2_ALG_SHA384:
 		return 7;
-	case TPM_ALG_SHA512:
+	case TPM2_ALG_SHA512:
 		return 9;
-	case TPM_ALG_NULL:
+	case TPM2_ALG_NULL:
 	default:
 		break;
 	}
@@ -149,70 +149,70 @@ digest_algorithm_base_weight(TPMI_ALG_HASH hash_alg)
 }
 
 static const char *
-show_algorithm_name(TPM_ALG_ID alg)
+show_algorithm_name(TPM2_ALG_ID alg)
 {
 	switch (alg) {
-	case TPM_ALG_RSA:
+	case TPM2_ALG_RSA:
 		return "RSA";
-	case TPM_ALG_SHA1:
+	case TPM2_ALG_SHA1:
 		return "SHA-1";
-	case TPM_ALG_HMAC:
+	case TPM2_ALG_HMAC:
 		return "HMAC";
-	case TPM_ALG_AES:
+	case TPM2_ALG_AES:
 		return "AES";
-	case TPM_ALG_MGF1:
+	case TPM2_ALG_MGF1:
 		return "MGF1";
-	case TPM_ALG_KEYEDHASH:
+	case TPM2_ALG_KEYEDHASH:
 		return "KEYEDHASH";
-	case TPM_ALG_XOR:
+	case TPM2_ALG_XOR:
 		return "XOR";
-	case TPM_ALG_SHA256:
+	case TPM2_ALG_SHA256:
 		return "SHA-256";
-	case TPM_ALG_SHA384:
+	case TPM2_ALG_SHA384:
 		return "SHA-384";
-	case TPM_ALG_SHA512:
+	case TPM2_ALG_SHA512:
 		return "SHA-512";
-	case TPM_ALG_NULL:
+	case TPM2_ALG_NULL:
 		return "NULL";
-	case TPM_ALG_SM3_256:
+	case TPM2_ALG_SM3_256:
 		return "SM3-256";
-	case TPM_ALG_SM4:
+	case TPM2_ALG_SM4:
 		return "SM4";
-	case TPM_ALG_RSASSA:
+	case TPM2_ALG_RSASSA:
 		return "RSASSA PKCS#1 v1.5";
-	case TPM_ALG_RSAES:
+	case TPM2_ALG_RSAES:
 		return "RSAES PKCS#1 v1.5";
-	case TPM_ALG_RSAPSS:
+	case TPM2_ALG_RSAPSS:
 		return "RSAES PSS";
-	case TPM_ALG_OAEP:
+	case TPM2_ALG_OAEP:
 		return "RSAES OAEP";
-	case TPM_ALG_ECDSA:
+	case TPM2_ALG_ECDSA:
 		return "ECDSA";
-	case TPM_ALG_ECDH:
+	case TPM2_ALG_ECDH:
 		return "ECC CDH";
-	case TPM_ALG_SM2:
+	case TPM2_ALG_SM2:
 		return "SM2";
-	case TPM_ALG_ECSCHNORR:
+	case TPM2_ALG_ECSCHNORR:
 		return "ECS";
-	case TPM_ALG_KDF1_SP800_56A:
+	case TPM2_ALG_KDF1_SP800_56A:
 		return "KDF1 (NIST SP800-56A)";
-	case TPM_ALG_KDF1_SP800_108:
+	case TPM2_ALG_KDF1_SP800_108:
 		return "KDF1 (NIST SP800-108)";
-	case TPM_ALG_ECC:
+	case TPM2_ALG_ECC:
 		return "ECC";
-	case TPM_ALG_SYMCIPHER:
+	case TPM2_ALG_SYMCIPHER:
 		return "Symmetric block cipher";
-	case TPM_ALG_CTR:
+	case TPM2_ALG_CTR:
 		return "Symmetric block cipher (Counter mode)";
-	case TPM_ALG_OFB:
+	case TPM2_ALG_OFB:
 		return "Symmetric block cipher (Output Feedback mode)";
-	case TPM_ALG_CBC:
+	case TPM2_ALG_CBC:
 		return "Symmetric block cipher (Cipher Block Chaining mode)";
-	case TPM_ALG_CFB:
+	case TPM2_ALG_CFB:
 		return "Symmetric block cipher (Cipher Feedback mode)";
-	case TPM_ALG_ECB:
+	case TPM2_ALG_ECB:
 		return "Symmetric block cipher (Electronic Codebook mode)";
-	case TPM_ALG_ERROR:
+	case TPM2_ALG_ERROR:
 		return NULL;
 	case 0x00c1 ... 0x00c6:
 		return "Reserved (for TPM 1.2 tags conflict)";
@@ -262,7 +262,7 @@ cryptfs_tpm2_capability_digest_algorithm_supported(TPMI_ALG_HASH *hash_alg)
 	dbg_cont("\n");
 #endif
 
-	TPMI_ALG_HASH preferred_alg = TPM_ALG_NULL;
+	TPMI_ALG_HASH preferred_alg = TPM2_ALG_NULL;
 	unsigned int weight = 0;
 
 	for (i = 0; i < algs->count; ++i) {
@@ -282,10 +282,10 @@ cryptfs_tpm2_capability_digest_algorithm_supported(TPMI_ALG_HASH *hash_alg)
 		}
 	}
 
-	if (*hash_alg != TPM_ALG_AUTO)
+	if (*hash_alg != TPM2_ALG_AUTO)
 		return false;
 
-	if (preferred_alg == TPM_ALG_NULL)
+	if (preferred_alg == TPM2_ALG_NULL)
 		return false;
 
 	*hash_alg = preferred_alg;
@@ -321,7 +321,7 @@ cryptfs_tpm2_capability_pcr_bank_supported(TPMI_ALG_HASH *hash_alg)
 	dbg_cont("\n");
 #endif
 
-	TPMI_ALG_HASH preferred_alg = TPM_ALG_NULL;
+	TPMI_ALG_HASH preferred_alg = TPM2_ALG_NULL;
 	unsigned int weight = 0;
 
 	for (i = 0; i < banks->count; ++i) {
@@ -331,7 +331,7 @@ cryptfs_tpm2_capability_pcr_bank_supported(TPMI_ALG_HASH *hash_alg)
 		if (*hash_alg == bank_alg)
 			return true;
 
-		if (*hash_alg != TPM_ALG_AUTO)
+		if (*hash_alg != TPM2_ALG_AUTO)
 			continue;
 
 		unsigned int alg_weight;
@@ -363,10 +363,10 @@ cryptfs_tpm2_capability_pcr_bank_supported(TPMI_ALG_HASH *hash_alg)
 		}
 	}
 
-	if (*hash_alg != TPM_ALG_AUTO)
+	if (*hash_alg != TPM2_ALG_AUTO)
 		return false;
 
-	if (preferred_alg == TPM_ALG_NULL)
+	if (preferred_alg == TPM2_ALG_NULL)
 		return false;
 
 	*hash_alg = preferred_alg;

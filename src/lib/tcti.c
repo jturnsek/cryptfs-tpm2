@@ -43,7 +43,7 @@ init_tcti_tabrmd(void)
 	TSS2_RC (*init)(TSS2_TCTI_CONTEXT *, size_t *, const char *conf);
 	TSS2_RC rc;
 
-	tcti_handle = dlopen("libtcti-tabrmd.so.0", RTLD_LAZY);
+	tcti_handle = dlopen("libtss2-tcti-tabrmd.so.0", RTLD_LAZY);
 	if (!tcti_handle) {
 		err("Unable to find out the tabrmd tcti library\n");
 		return NULL;

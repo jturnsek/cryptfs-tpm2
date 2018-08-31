@@ -52,7 +52,7 @@ set_session_auth(TPMS_AUTH_COMMAND *session, TPMI_SH_AUTH_SESSION handle,
 	session->sessionHandle = handle;
 	session->nonce.size = 0;
 	*((UINT8 *)((void *)&session->sessionAttributes)) = 0;
-	session->sessionAttributes.continueSession = 1;
+	session->sessionAttributes |= TPMA_SESSION_CONTINUESESSION;
 
 	if (auth_password && auth_password_size) {
 		session->hmac.size = auth_password_size;
@@ -114,7 +114,7 @@ policy_session_create(struct session_complex *s, TPM2_SE type,
 	nonce_tpm.size = nonce_caller.size;
 
 	UINT32 rc = Tss2_Sys_StartAuthSession(cryptfs_tpm2_sys_context,
-					      TPM_RH_NULL, TPM_RH_NULL, NULL,
+					      TPM2_RH_NULL, TPM2_RH_NULL, NULL,
 					      &nonce_caller, &salt,
 					      type, &symmetric,
 					      hash_alg, &s->session_handle,

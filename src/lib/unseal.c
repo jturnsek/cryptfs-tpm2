@@ -58,8 +58,8 @@ redo:
 
 		pcrs.count = 1;
 		pcrs.pcrSelections->hash = pcr_bank_alg;
-		pcrs.pcrSelections->sizeofSelect = PCR_SELECT_MAX;
-		memset(pcrs.pcrSelections->pcrSelect, 0, PCR_SELECT_MAX);
+		pcrs.pcrSelections->sizeofSelect = TPM2_PCR_SELECT_MAX;
+		memset(pcrs.pcrSelections->pcrSelect, 0, TPM2_PCR_SELECT_MAX);
 		pcrs.pcrSelections->pcrSelect[pcr_index / 8] |=
 			(1 << (pcr_index % 8));
 
@@ -80,7 +80,7 @@ redo:
 	} else
 		password_session_create(&s, (char *)secret, secret_size);
 
-	TPM2B_SENSITIVE_DATA out_data = {{ sizeof(TPM2B_SENSITIVE_DATA)-2, }};
+	TPM2B_SENSITIVE_DATA out_data = { .size = sizeof(TPM2B_SENSITIVE_DATA)-2 };
 
 	UINT32 rc;
 

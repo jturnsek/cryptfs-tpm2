@@ -43,8 +43,8 @@ cryptfs_tpm2_read_pcr(TPMI_ALG_HASH bank_alg, unsigned int index,
 
 	pcrs.count = 1;
 	pcrs.pcrSelections->hash = bank_alg;
-	pcrs.pcrSelections->sizeofSelect = PCR_SELECT_MAX;
-	memset(pcrs.pcrSelections->pcrSelect, 0, PCR_SELECT_MAX);
+	pcrs.pcrSelections->sizeofSelect = TPM2_PCR_SELECT_MAX;
+	memset(pcrs.pcrSelections->pcrSelect, 0, TPM2_PCR_SELECT_MAX);
 	pcrs.pcrSelections->pcrSelect[index / 8] |= (1 << (index % 8));
 
 	/* Obviously I'm lazy of using malloc() here */

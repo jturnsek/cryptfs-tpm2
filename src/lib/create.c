@@ -170,7 +170,7 @@ set_public(TPMI_ALG_PUBLIC type, TPMI_ALG_HASH name_alg, int set_key,
 		inPublic->publicArea.parameters.eccDetail.symmetric.keyBits.aes = 128;
 		inPublic->publicArea.parameters.eccDetail.symmetric.mode.sym = TPM2_ALG_CFB;
 		inPublic->publicArea.parameters.eccDetail.scheme.scheme = TPM2_ALG_NULL;
-		inPublic->publicArea.parameters.eccDetail.curveID = TPM_ECC_NIST_P256;
+		inPublic->publicArea.parameters.eccDetail.curveID = TPM2_ECC_NIST_P256;
 		inPublic->publicArea.parameters.eccDetail.kdf.scheme = TPM2_ALG_NULL;
 		inPublic->publicArea.unique.ecc.x.size = 0;
 		inPublic->publicArea.unique.ecc.y.size = 0;
@@ -243,7 +243,7 @@ cryptfs_tpm2_create_primary_key(TPMI_ALG_HASH pcr_bank_alg)
 	TPM2B_CREATION_DATA creation_data = { .size = 0 };
 	TPM2B_DIGEST creation_hash = { .size = sizeof(TPM2B_DIGEST) - 2 };
 	TPMT_TK_CREATION creation_ticket = { .tag = 0 };
-	TPM_HANDLE obj_handle;
+	TPM2_HANDLE obj_handle;
 	uint8_t owner_auth[sizeof(TPMU_HA)];
 	unsigned int owner_auth_size = sizeof(owner_auth);
 
@@ -256,7 +256,7 @@ redo:
 	password_session_create(&s, (char *)owner_auth, owner_auth_size);
 
 	rc = Tss2_Sys_CreatePrimary(cryptfs_tpm2_sys_context,
-				    TPM_RH_OWNER, &s.sessionsData,
+				    TPM2_RH_OWNER, &s.sessionsData,
 				    &in_sensitive, &in_public,
 				    &outside_info, &creation_pcrs,
 				    &obj_handle, &out_public,
@@ -425,7 +425,7 @@ redo:
 	dbg("Preparing to load the passphrase object ...\n");
 
 	TPM2B_NAME name_ext = { .size = sizeof(TPM2B_NAME) - 2 };
-	TPM_HANDLE obj_handle;
+	TPM2_HANDLE obj_handle;
 
 	rc = Tss2_Sys_Load(cryptfs_tpm2_sys_context,
 			   CRYPTFS_TPM2_PRIMARY_KEY_HANDLE, &s.sessionsData,

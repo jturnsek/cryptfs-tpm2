@@ -52,7 +52,7 @@ clear_lockout(const char *lockout_auth)
 	UINT32 rc;
 
 	rc = Tss2_Sys_DictionaryAttackLockReset(cryptfs_tpm2_sys_context,
-						TPM_RH_LOCKOUT,
+						TPM2_RH_LOCKOUT,
 						&s.sessionsData,
 						&s.sessionsDataOut);
         if (rc != TPM2_RC_SUCCESS) {

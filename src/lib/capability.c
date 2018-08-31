@@ -50,7 +50,7 @@ capability_read_public(TPMI_DH_OBJECT handle, TPM2B_PUBLIC *public_out)
 
 	UINT32 rc = Tss2_Sys_GetCapability(cryptfs_tpm2_sys_context, NULL,
 					   TPM2_CAP_HANDLES, TPM2_HT_PERSISTENT,
-          				   TPM2_PT_HR_PERSISTENT, &more_data,
+          				   TPM2_PT_TPM2_HR_PERSISTENT, &more_data,
 					   &capability_data, NULL);
 	if (rc != TPM2_RC_SUCCESS) {
 		err("Unable to get the TPM persistent handles (%#x)", rc);
@@ -269,7 +269,7 @@ cryptfs_tpm2_capability_digest_algorithm_supported(TPMI_ALG_HASH *hash_alg)
 		TPMS_ALG_PROPERTY alg_property = algs->algProperties[i];
 		unsigned alg_weight;
 
-		if (alg_property.algProperties.hash != 1)
+		if (alg_property.algProperties & TPMA_ALGORITHM_HASH)
 			continue;
 
 		if (*hash_alg == alg_property.alg)
@@ -384,7 +384,7 @@ get_permanent_property(TPM2_PT property, UINT32 *value)
 	UINT32 rc;
 
 	rc = Tss2_Sys_GetCapability(cryptfs_tpm2_sys_context, NULL,
-				    TPM2_CAP_TPM2_PROPERTIES, property,
+				    TPM2_CAP_TPM_PROPERTIES, property,
 				    1, &more_data,
 				    &capability_data, NULL);
 	if (rc != TPM2_RC_SUCCESS) {
@@ -392,7 +392,7 @@ get_permanent_property(TPM2_PT property, UINT32 *value)
 		return rc;
 	}
 
-	TPML_TAGGED_TPM2_PROPERTY *properties;
+	TPML_TAGGED_TPM_PROPERTY *properties;
 
 	properties = &capability_data.data.tpmProperties;
 
@@ -422,7 +422,7 @@ cryptfs_tpm2_capability_in_lockout(bool *in_lockout)
 
 	rc = get_permanent_property(TPM2_PT_PERMANENT, (UINT32 *)&attrs);
 	if (rc == TPM2_RC_SUCCESS) {
-		*in_lockout = !!attrs.inLockout;
+		*in_lockout = !!(attrs & TPMA_PERMANENT_INLOCKOUT);
 		return EXIT_SUCCESS;
 	}
 
@@ -440,7 +440,7 @@ cryptfs_tpm2_capability_lockout_auth_required(bool *required)
 
 	rc = get_permanent_property(TPM2_PT_PERMANENT, (UINT32 *)&attrs);
 	if (rc == TPM2_RC_SUCCESS) {
-		*required = !!attrs.lockoutAuthSet;
+		*required = !!(attrs & TPMA_PERMANENT_LOCKOUTAUTHSET);
 		return EXIT_SUCCESS;
 	}
 
@@ -458,7 +458,7 @@ cryptfs_tpm2_capability_owner_auth_required(bool *required)
 
 	rc = get_permanent_property(TPM2_PT_PERMANENT, (UINT32 *)&attrs);
 	if (rc == TPM2_RC_SUCCESS) {
-		*required = !!attrs.ownerAuthSet;
+		*required = !!(attrs & TPMA_PERMANENT_OWNERAUTHSET);
 		return EXIT_SUCCESS;
 	}
 

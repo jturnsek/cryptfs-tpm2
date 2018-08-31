@@ -85,7 +85,7 @@ extend_pcr_policy_digest(TPMI_DH_OBJECT session_handle,
 	}
 
 	unsigned nr_pcr_real = 0;
-	TPM2B_DIGEST digest_tpm = { { alg_size, } };
+	TPM2B_DIGEST digest_tpm = { .size = alg_size };
 
 	for (UINT32 c = 0; c < pcrs_out.count; ++c) {
 		TPMS_PCR_SELECTION *pcr_sel = pcrs->pcrSelections + c;

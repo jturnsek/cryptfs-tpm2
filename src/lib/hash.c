@@ -49,7 +49,7 @@ tpm_hash(TPMI_ALG_HASH hash_alg, BYTE *data, UINT16 data_len,
 	data_buf.size = data_len;
 	memcpy(data_buf.buffer, data, data_len);
 
-	TPM2B_DIGEST digest = { { hash_size, } };
+	TPM2B_DIGEST digest = { .size = hash_size };
 
 	UINT32 rc = Tss2_Sys_Hash(cryptfs_tpm2_sys_context, NULL, &data_buf,
 				  hash_alg, TPM_RH_NULL, &digest, NULL,

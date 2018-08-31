@@ -107,13 +107,33 @@ set_public(TPMI_ALG_PUBLIC type, TPMI_ALG_HASH name_alg, int set_key,
 	}
 
 	*(UINT32 *)&(inPublic->publicArea.objectAttributes) = 0;
-	inPublic->publicArea.objectAttributes.restricted = 1;
-	inPublic->publicArea.objectAttributes.userWithAuth = set_key ? 1: !use_policy;
-	inPublic->publicArea.objectAttributes.decrypt = 1;
-	inPublic->publicArea.objectAttributes.fixedTPM = 1;
-	inPublic->publicArea.objectAttributes.fixedParent = 1;
-	inPublic->publicArea.objectAttributes.sensitiveDataOrigin = !sensitive_size;
-	inPublic->publicArea.objectAttributes.noDA = !!option_no_da;
+	inPublic->publicArea.objectAttributes |= TPMA_OBJECT_RESTRICTED;
+	if (set_key) {
+		inPublic->publicArea.objectAttributes |= TPMA_OBJECT_USERWITHAUTH;
+	}
+	else {
+		if (use_policy) {
+			inPublic->publicArea.objectAttributes &= ~TPMA_OBJECT_USERWITHAUTH;
+		}
+		else {
+			inPublic->publicArea.objectAttributes |= TPMA_OBJECT_USERWITHAUTH;
+		}
+	}
+	inPublic->publicArea.objectAttributes |= TPMA_OBJECT_DECRYPT; 
+	inPublic->publicArea.objectAttributes |= TPMA_OBJECT_FIXEDTPM;
+	inPublic->publicArea.objectAttributes |= TPMA_OBJECT_FIXEDPARENT;
+	if (sensitive_size) {
+		inPublic->publicArea.objectAttributes &= ~TPMA_OBJECT_SENSITIVEDATAORIGIN;	
+	}
+	else {
+		inPublic->publicArea.objectAttributes |= TPMA_OBJECT_SENSITIVEDATAORIGIN;
+	}
+	if (option_no_da) {
+		inPublic->publicArea.objectAttributes |= TPMA_OBJECT_NODA;
+	}
+	else {
+		inPublic->publicArea.objectAttributes &= ~TPMA_OBJECT_NODA;	
+	}
 	inPublic->publicArea.type = type;
 
 	if (use_policy)
@@ -134,9 +154,9 @@ set_public(TPMI_ALG_PUBLIC type, TPMI_ALG_HASH name_alg, int set_key,
 	case TPM2_ALG_KEYEDHASH:
 		if (!set_key) {
 			/* Always used for sealed data */
-			inPublic->publicArea.objectAttributes.sign = 0;
-			inPublic->publicArea.objectAttributes.restricted = 0;
-			inPublic->publicArea.objectAttributes.decrypt = 0;
+			inPublic->publicArea.objectAttributes &= ~TPMA_OBJECT_SIGN_ENCRYPT;
+			inPublic->publicArea.objectAttributes &= ~TPMA_OBJECT_RESTRICTED;
+			inPublic->publicArea.objectAttributes &= ~TPMA_OBJECT_DECRYPT;
 			inPublic->publicArea.parameters.keyedHashDetail.scheme.scheme = TPM2_ALG_NULL;
 		} else {
 			inPublic->publicArea.parameters.keyedHashDetail.scheme.scheme = TPM2_ALG_XOR;
@@ -217,12 +237,12 @@ cryptfs_tpm2_create_primary_key(TPMI_ALG_HASH pcr_bank_alg)
 	in_sensitive.size = in_sensitive.sensitive.userAuth.size + 2;
 	in_sensitive.sensitive.data.size = 0;
 
-	TPM2B_DATA outside_info = { { 0, } };
+	TPM2B_DATA outside_info = { .size = 0 };
 	TPM2B_NAME out_name = { .size = sizeof(TPM2B_NAME) - 2 };
-	TPM2B_PUBLIC out_public = { { 0, } };
-	TPM2B_CREATION_DATA creation_data = { { 0, } };
+	TPM2B_PUBLIC out_public = { .size = 0 };
+	TPM2B_CREATION_DATA creation_data = { .size = 0 };
 	TPM2B_DIGEST creation_hash = { .size = sizeof(TPM2B_DIGEST) - 2 };
-	TPMT_TK_CREATION creation_ticket = { 0, };
+	TPMT_TK_CREATION creation_ticket = { .tag = 0 };
 	TPM_HANDLE obj_handle;
 	uint8_t owner_auth[sizeof(TPMU_HA)];
 	unsigned int owner_auth_size = sizeof(owner_auth);
@@ -358,11 +378,11 @@ cryptfs_tpm2_create_passphrase(char *passphrase, size_t passphrase_size,
 	memcpy(in_sensitive.sensitive.data.buffer, passphrase,
 	       passphrase_size);
 
-	TPM2B_DATA outside_info = { { 0, } };
-	TPM2B_CREATION_DATA creation_data = { { 0, } };
+	TPM2B_DATA outside_info = { .size = 0 };
+	TPM2B_CREATION_DATA creation_data = { .size = 0 };
 	TPM2B_DIGEST creation_hash = { .size = sizeof(TPM2B_DIGEST) - 2 };
-	TPMT_TK_CREATION creation_ticket = { 0, };
-	TPM2B_PUBLIC out_public = { { 0, } };
+	TPMT_TK_CREATION creation_ticket = { .tag = 0 };
+	TPM2B_PUBLIC out_public = { .size = 0 };
 	TPM2B_PRIVATE out_private = { .size = sizeof(TPM2B_PRIVATE) - 2 };
 	struct session_complex s;
 

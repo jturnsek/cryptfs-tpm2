@@ -112,21 +112,21 @@ extend_pcr_policy_digest(TPMI_DH_OBJECT session_handle,
 				if (nr_pcr_real) {
 					BYTE data[sizeof(TPMU_HA) * 2];
 
-					memcpy(data, digest_tpm.t.buffer,
+					memcpy(data, digest_tpm.buffer,
 					       alg_size);
 					memcpy(data + alg_size,
-					       pcr_digests->digests[nr_pcr_real].t.buffer,
+					       pcr_digests->digests[nr_pcr_real].buffer,
 					       alg_size);
 
 					if (hash_digest(policy_digest_alg,
 							data, alg_size * 2,
-							digest_tpm.t.buffer))
+							digest_tpm.buffer))
 						return -1;
 				} else {
 					if (hash_digest(policy_digest_alg,
-						        pcr_digests->digests[nr_pcr_real].t.buffer,
-						        pcr_digests->digests[nr_pcr_real].t.size,
-							digest_tpm.t.buffer))
+						        pcr_digests->digests[nr_pcr_real].buffer,
+						        pcr_digests->digests[nr_pcr_real].size,
+							digest_tpm.buffer))
 						return -1;
 				}
 

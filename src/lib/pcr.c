@@ -81,10 +81,10 @@ cryptfs_tpm2_read_pcr(TPMI_ALG_HASH bank_alg, unsigned int index,
 
 	util_digest_size(bank_alg, &alg_size);
 
-	if (pcr_digest.digests->t.size != alg_size)
+	if (pcr_digest.digests->size != alg_size)
 		return -1;
 
-	memcpy(out, pcr_digest.digests->t.buffer, alg_size);
+	memcpy(out, pcr_digest.digests->buffer, alg_size);
 
 	return 0;
 }

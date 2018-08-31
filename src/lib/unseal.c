@@ -94,9 +94,9 @@ redo:
 			if (da_reset() == EXIT_SUCCESS)
 				goto redo;
 		} else if (tpm2_rc_is_format_one(rc) &&
-			   (((tpm2_rc_get_code_7bit(rc) | RC_FMT1) ==
+			   (((tpm2_rc_get_code_7bit(rc) | TPM2_RC_FMT1) ==
 			   TPM2_RC_BAD_AUTH) ||
-			   ((tpm2_rc_get_code_7bit(rc) | RC_FMT1) ==
+			   ((tpm2_rc_get_code_7bit(rc) | TPM2_RC_FMT1) ==
 			   TPM2_RC_AUTH_FAIL))) {
 			err("Wrong passphrase secret specified\n");
 
@@ -112,14 +112,14 @@ redo:
 		return -1;
 	}
 
-	info("Succeed to unseal the passphrase (%d-byte)\n", out_data.t.size);
+	info("Succeed to unseal the passphrase (%d-byte)\n", out_data.size);
 
-	*passphrase = malloc(out_data.t.size);
+	*passphrase = malloc(out_data.size);
 	if (!*passphrase)
 		return -1;
 
-	memcpy(*passphrase, out_data.t.buffer, out_data.t.size);
-	*passphrase_size = out_data.t.size;
+	memcpy(*passphrase, out_data.buffer, out_data.size);
+	*passphrase_size = out_data.size;
 
 	return 0;
 }

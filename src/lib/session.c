@@ -50,23 +50,23 @@ set_session_auth(TPMS_AUTH_COMMAND *session, TPMI_SH_AUTH_SESSION handle,
 		 void *auth_password, size_t auth_password_size)
 {
 	session->sessionHandle = handle;
-	session->nonce.t.size = 0;
+	session->nonce.size = 0;
 	*((UINT8 *)((void *)&session->sessionAttributes)) = 0;
 	session->sessionAttributes.continueSession = 1;
 
 	if (auth_password && auth_password_size) {
-		session->hmac.t.size = auth_password_size;
-		memcpy(session->hmac.t.buffer, auth_password,
-		       session->hmac.t.size);
+		session->hmac.size = auth_password_size;
+		memcpy(session->hmac.buffer, auth_password,
+		       session->hmac.size);
 	} else
-		session->hmac.t.size = 0;
+		session->hmac.size = 0;
 }
 
 static void
 set_password_auth(TPMS_AUTH_COMMAND *session, char *auth_password,
 		  unsigned int auth_password_size)
 {
-	set_session_auth(session, TPM_RS_PW, auth_password,
+	set_session_auth(session, TPM2_RS_PW, auth_password,
 			 auth_password && auth_password_size ?
 			 auth_password_size : 0);
 }
@@ -100,18 +100,18 @@ policy_session_create(struct session_complex *s, TPM2_SE type,
 	}
 
 	TPM2B_ENCRYPTED_SECRET salt;
-	salt.t.size = 0;
+	salt.size = 0;
 
 	/* No symmetric algorithm */
 	TPMT_SYM_DEF symmetric;
 	symmetric.algorithm = TPM2_ALG_NULL;
 
 	TPM2B_NONCE nonce_caller;
-	nonce_caller.t.size = hash_alg_size;
-	memset(nonce_caller.t.buffer, 0, nonce_caller.t.size);
+	nonce_caller.size = hash_alg_size;
+	memset(nonce_caller.buffer, 0, nonce_caller.size);
 
 	TPM2B_NONCE nonce_tpm;
-	nonce_tpm.t.size = nonce_caller.t.size;
+	nonce_tpm.size = nonce_caller.size;
 
 	UINT32 rc = Tss2_Sys_StartAuthSession(cryptfs_tpm2_sys_context,
 					      TPM_RH_NULL, TPM_RH_NULL, NULL,
@@ -138,7 +138,7 @@ policy_session_create(struct session_complex *s, TPM2_SE type,
 void
 policy_session_destroy(struct session_complex *s)
 {
-	if (s->session_handle == TPM_RS_PW)
+	if (s->session_handle == TPM2_RS_PW)
 		return;
 
 	UINT32 rc = Tss2_Sys_FlushContext(cryptfs_tpm2_sys_context,
@@ -156,7 +156,7 @@ password_session_create(struct session_complex *s, char *auth_password,
 {
 	set_password_auth(&s->sessionData, auth_password, auth_password_size);
 
-	s->session_handle = TPM_RS_PW;
+	s->session_handle = TPM2_RS_PW;
 
 	complete_session_complex(s);
 }

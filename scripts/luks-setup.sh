@@ -161,7 +161,7 @@ create_luks_partition() {
     fi
 
     ! cryptsetup --batch-mode --type luks --cipher aes-xts-plain --hash sha256 \
-        --use-random --key-file "$passphrase" luksFormat "$luks_dev" &&
+        --use-urandom --key-file "$passphrase" luksFormat "$luks_dev" &&
         print_error "Unable to create the LUKS partition on $luks_dev" &&
         return 1
 

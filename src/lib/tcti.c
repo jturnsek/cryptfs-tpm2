@@ -190,7 +190,7 @@ cryptfs_tpm2_tcti_init_context(void)
 
 	tcti_str = getenv("TSS2_TCTI");
 	if (!tcti_str) {
-		tcti_str = "tabrmd";
+		tcti_str = "device";
 
 		info("Use %s as the default tcti interface\n", tcti_str);
 	}

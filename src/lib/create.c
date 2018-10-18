@@ -39,7 +39,11 @@ static int
 calc_policy_digest(TPML_PCR_SELECTION *pcrs, TPMI_ALG_HASH policy_digest_alg,
 		   TPM2B_DIGEST *policy_digest)
 {
+#ifndef TSS2_LEGACY_V1
 	if (util_digest_size(policy_digest_alg, &policy_digest->size))
+#else
+	if (util_digest_size(policy_digest_alg, &policy_digest->t.size))
+#endif
 		return -1;
 
 	struct session_complex s;
@@ -81,7 +85,11 @@ set_public(TPMI_ALG_PUBLIC type, TPMI_ALG_HASH name_alg, int set_key,
 	case TPM2_ALG_SHA512:
 	case TPM2_ALG_SM3_256:
 	case TPM2_ALG_NULL:
+#ifndef TSS2_LEGACY_V1
 		inPublic->publicArea.nameAlg = name_alg;
+#else
+		inPublic->t.publicArea.nameAlg = name_alg;
+#endif
 		break;
 	default:
 		err("nameAlg algorithm %#x is not supportted\n", name_alg);
@@ -90,59 +98,71 @@ set_public(TPMI_ALG_PUBLIC type, TPMI_ALG_HASH name_alg, int set_key,
 
 	int use_policy = 0;
 
+#ifndef TSS2_LEGACY_V1
 	if (policy_digest && policy_digest->size) {
+#else
+	if (policy_digest && policy_digest->t.size) {
+#endif
 		UINT16 name_alg_size;
 
 		if (util_digest_size(name_alg, &name_alg_size))
 			return -1;
-
+#ifndef TSS2_LEGACY_V1
 		if (policy_digest->size < name_alg_size) {
 			err("The size of policy digest (%d-byte) should be "
 			    "equal or bigger then nameAlg (%d-byte)\n",
 			    policy_digest->size, name_alg_size);
+#else
+		if (policy_digest->t.size < name_alg_size) {
+			err("The size of policy digest (%d-byte) should be "
+			    "equal or bigger then nameAlg (%d-byte)\n",
+			    policy_digest->t.size, name_alg_size);
+#endif
 			return -1;
 		}
 
 		use_policy = 1;
 	}
 
+#ifndef TSS2_LEGACY_V1
+	
 	*(UINT32 *)&(inPublic->publicArea.objectAttributes) = 0;
 	inPublic->publicArea.objectAttributes |= TPMA_OBJECT_RESTRICTED;
-	if (set_key) {
+	if (set_key || !use_policy)
 		inPublic->publicArea.objectAttributes |= TPMA_OBJECT_USERWITHAUTH;
-	}
-	else {
-		if (use_policy) {
-			inPublic->publicArea.objectAttributes &= ~TPMA_OBJECT_USERWITHAUTH;
-		}
-		else {
-			inPublic->publicArea.objectAttributes |= TPMA_OBJECT_USERWITHAUTH;
-		}
-	}
-	inPublic->publicArea.objectAttributes |= TPMA_OBJECT_DECRYPT; 
+	inPublic->publicArea.objectAttributes |= TPMA_OBJECT_DECRYPT;
 	inPublic->publicArea.objectAttributes |= TPMA_OBJECT_FIXEDTPM;
 	inPublic->publicArea.objectAttributes |= TPMA_OBJECT_FIXEDPARENT;
-	if (sensitive_size) {
-		inPublic->publicArea.objectAttributes &= ~TPMA_OBJECT_SENSITIVEDATAORIGIN;	
-	}
-	else {
+	if (!sensitive_size)
 		inPublic->publicArea.objectAttributes |= TPMA_OBJECT_SENSITIVEDATAORIGIN;
-	}
-	if (option_no_da) {
+	if (option_no_da)
 		inPublic->publicArea.objectAttributes |= TPMA_OBJECT_NODA;
-	}
-	else {
-		inPublic->publicArea.objectAttributes &= ~TPMA_OBJECT_NODA;	
-	}
 	inPublic->publicArea.type = type;
 
 	if (use_policy)
 		inPublic->publicArea.authPolicy = *policy_digest;
 	else
 		inPublic->publicArea.authPolicy.size = 0;
+#else
+	*(UINT32 *)&(inPublic->t.publicArea.objectAttributes) = 0;
+	inPublic->t.publicArea.objectAttributes.restricted = 1;
+	inPublic->t.publicArea.objectAttributes.userWithAuth = set_key ? 1: !use_policy;
+	inPublic->t.publicArea.objectAttributes.decrypt = 1;
+	inPublic->t.publicArea.objectAttributes.fixedTPM = 1;
+	inPublic->t.publicArea.objectAttributes.fixedParent = 1;
+	inPublic->t.publicArea.objectAttributes.sensitiveDataOrigin = !sensitive_size;
+	inPublic->t.publicArea.objectAttributes.noDA = !!option_no_da;
+	inPublic->t.publicArea.type = type;
+
+	if (use_policy)
+		inPublic->publicArea.authPolicy = *policy_digest;
+	else
+		inPublic->t.publicArea.authPolicy.t.size = 0;
+#endif
 
 	switch (type) {
 	case TPM2_ALG_RSA:
+#ifndef TSS2_LEGACY_V1
 		inPublic->publicArea.parameters.rsaDetail.symmetric.algorithm = TPM2_ALG_AES;
 		inPublic->publicArea.parameters.rsaDetail.symmetric.keyBits.aes = 128;
 		inPublic->publicArea.parameters.rsaDetail.symmetric.mode.aes = TPM2_ALG_CFB;
@@ -150,13 +170,23 @@ set_public(TPMI_ALG_PUBLIC type, TPMI_ALG_HASH name_alg, int set_key,
 		inPublic->publicArea.parameters.rsaDetail.keyBits = 2048;
 		inPublic->publicArea.parameters.rsaDetail.exponent = 0;
 		inPublic->publicArea.unique.rsa.size = 0;
+#else
+		inPublic->t.publicArea.parameters.rsaDetail.symmetric.algorithm = TPM2_ALG_AES;
+		inPublic->t.publicArea.parameters.rsaDetail.symmetric.keyBits.aes = 128;
+		inPublic->t.publicArea.parameters.rsaDetail.symmetric.mode.aes = TPM2_ALG_CFB;
+		inPublic->t.publicArea.parameters.rsaDetail.scheme.scheme = TPM2_ALG_NULL;
+		inPublic->t.publicArea.parameters.rsaDetail.keyBits = 2048;
+		inPublic->t.publicArea.parameters.rsaDetail.exponent = 0;
+		inPublic->t.publicArea.unique.rsa.t.size = 0;
+#endif
 		break;
 	case TPM2_ALG_KEYEDHASH:
 		if (!set_key) {
 			/* Always used for sealed data */
+#ifndef TSS2_LEGACY_V1
 			inPublic->publicArea.objectAttributes &= ~TPMA_OBJECT_SIGN_ENCRYPT;
 			inPublic->publicArea.objectAttributes &= ~TPMA_OBJECT_RESTRICTED;
-			inPublic->publicArea.objectAttributes &= ~TPMA_OBJECT_DECRYPT;
+			inPublic->publicArea.objectAttributes &= ~TPMA_OBJECT_DECRYPT ;
 			inPublic->publicArea.parameters.keyedHashDetail.scheme.scheme = TPM2_ALG_NULL;
 		} else {
 			inPublic->publicArea.parameters.keyedHashDetail.scheme.scheme = TPM2_ALG_XOR;
@@ -164,8 +194,22 @@ set_public(TPMI_ALG_PUBLIC type, TPMI_ALG_HASH name_alg, int set_key,
 			inPublic->publicArea.parameters.keyedHashDetail.scheme.details.exclusiveOr.kdf = TPM2_ALG_KDF1_SP800_108;
 		}
 		inPublic->publicArea.unique.keyedHash.size = 0;
+#else
+			inPublic->t.publicArea.objectAttributes.sign = 0;
+			inPublic->t.publicArea.objectAttributes.restricted = 0;
+			inPublic->t.publicArea.objectAttributes.decrypt = 0;
+			inPublic->t.publicArea.parameters.keyedHashDetail.scheme.scheme = TPM_ALG_NULL;
+		} else {
+
+			inPublic->t.publicArea.parameters.keyedHashDetail.scheme.scheme = TPM2_ALG_XOR;
+			inPublic->t.publicArea.parameters.keyedHashDetail.scheme.details.exclusiveOr.hashAlg = TPM2_ALG_SHA256;
+			inPublic->t.publicArea.parameters.keyedHashDetail.scheme.details.exclusiveOr.kdf = TPM2_ALG_KDF1_SP800_108;
+		}
+		inPublic->t.publicArea.unique.keyedHash.t.size = 0;
+#endif
 		break;
 	case TPM2_ALG_ECC:
+#ifndef TSS2_LEGACY_V1
 		inPublic->publicArea.parameters.eccDetail.symmetric.algorithm = TPM2_ALG_AES;
 		inPublic->publicArea.parameters.eccDetail.symmetric.keyBits.aes = 128;
 		inPublic->publicArea.parameters.eccDetail.symmetric.mode.sym = TPM2_ALG_CFB;
@@ -174,12 +218,29 @@ set_public(TPMI_ALG_PUBLIC type, TPMI_ALG_HASH name_alg, int set_key,
 		inPublic->publicArea.parameters.eccDetail.kdf.scheme = TPM2_ALG_NULL;
 		inPublic->publicArea.unique.ecc.x.size = 0;
 		inPublic->publicArea.unique.ecc.y.size = 0;
+#else
+		inPublic->t.publicArea.parameters.eccDetail.symmetric.algorithm = TPM2_ALG_AES;
+		inPublic->t.publicArea.parameters.eccDetail.symmetric.keyBits.aes = 128;
+		inPublic->t.publicArea.parameters.eccDetail.symmetric.mode.sym = TPM2_ALG_CFB;
+		inPublic->t.publicArea.parameters.eccDetail.scheme.scheme = TPM2_ALG_NULL;
+		inPublic->t.publicArea.parameters.eccDetail.curveID = TPM2_ECC_NIST_P256;
+		inPublic->t.publicArea.parameters.eccDetail.kdf.scheme = TPM2_ALG_NULL;
+		inPublic->t.publicArea.unique.ecc.x.t.size = 0;
+		inPublic->t.publicArea.unique.ecc.y.t.size = 0;
+#endif
 		break;
 	case TPM2_ALG_SYMCIPHER:
+#ifndef TSS2_LEGACY_V1
 		inPublic->publicArea.parameters.symDetail.sym.algorithm = TPM2_ALG_AES;
 		inPublic->publicArea.parameters.symDetail.sym.keyBits.sym = 128;
 		inPublic->publicArea.parameters.symDetail.sym.mode.sym = TPM2_ALG_CFB;
 		inPublic->publicArea.unique.sym.size = 0;
+#else
+		inPublic->t.publicArea.parameters.symDetail.sym.algorithm = TPM2_ALG_AES;
+		inPublic->t.publicArea.parameters.symDetail.sym.keyBits.sym = 128;
+		inPublic->t.publicArea.parameters.symDetail.sym.mode.sym = TPM2_ALG_CFB;
+		inPublic->t.publicArea.unique.sym.t.size = 0;
+#endif
 		break;
 	default:
 		err("type algorithm %#x is not supportted\n", type);
@@ -201,7 +262,7 @@ cryptfs_tpm2_create_primary_key(TPMI_ALG_HASH pcr_bank_alg)
 
 		creation_pcrs.count = 1;
 		creation_pcrs.pcrSelections->hash = pcr_bank_alg;
-		creation_pcrs.pcrSelections->sizeofSelect = TPM2_PCR_SELECT_MAX;
+		creation_pcrs.pcrSelections->sizeofSelect = 3;
 		memset(creation_pcrs.pcrSelections->pcrSelect, 0,
 		       TPM2_PCR_SELECT_MAX);
 		creation_pcrs.pcrSelections->pcrSelect[pcr_index / 8] |=
@@ -215,7 +276,11 @@ cryptfs_tpm2_create_primary_key(TPMI_ALG_HASH pcr_bank_alg)
 		name_alg = pcr_bank_alg;
 	} else {
 		creation_pcrs.count = 0;
+#ifndef TSS2_LEGACY_V1
 		policy_digest.size = 0;
+#else
+		policy_digest.t.size = 0;
+#endif
 		name_alg = TPM2_ALG_SHA1;
 	}
 
@@ -231,18 +296,34 @@ cryptfs_tpm2_create_primary_key(TPMI_ALG_HASH pcr_bank_alg)
 
 	TPM2B_SENSITIVE_CREATE in_sensitive;
 
+#ifndef TSS2_LEGACY_V1
 	in_sensitive.sensitive.userAuth.size = secret_size;
 	memcpy((char *)in_sensitive.sensitive.userAuth.buffer,
 	       secret, in_sensitive.sensitive.userAuth.size);
 	in_sensitive.size = in_sensitive.sensitive.userAuth.size + 2;
 	in_sensitive.sensitive.data.size = 0;
 
-	TPM2B_DATA outside_info = { .size = 0 };
-	TPM2B_NAME out_name = { .size = sizeof(TPM2B_NAME) - 2 };
-	TPM2B_PUBLIC out_public = { .size = 0 };
-	TPM2B_CREATION_DATA creation_data = { .size = 0 };
-	TPM2B_DIGEST creation_hash = { .size = sizeof(TPM2B_DIGEST) - 2 };
-	TPMT_TK_CREATION creation_ticket = { .tag = 0 };
+	TPM2B_DATA outside_info = { 0, };
+	TPM2B_NAME out_name = { sizeof(TPM2B_NAME) - 2, };
+	TPM2B_PUBLIC out_public = { 0, };
+	TPM2B_CREATION_DATA creation_data = { 0, };
+	TPM2B_DIGEST creation_hash = { sizeof(TPM2B_DIGEST) - 2, };
+
+
+#else
+	in_sensitive.t.sensitive.userAuth.t.size = secret_size;
+	memcpy((char *)in_sensitive.t.sensitive.userAuth.t.buffer,
+	       secret, in_sensitive.t.sensitive.userAuth.t.size);
+	in_sensitive.t.size = in_sensitive.t.sensitive.userAuth.t.size + 2;
+	in_sensitive.t.sensitive.data.t.size = 0;
+
+	TPM2B_DATA outside_info = { { 0, } };
+	TPM2B_NAME out_name = { { sizeof(TPM2B_NAME) - 2, } };
+	TPM2B_PUBLIC out_public = { { 0, } };
+	TPM2B_CREATION_DATA creation_data = { 0, };
+	TPM2B_DIGEST creation_hash = { { sizeof(TPM2B_DIGEST) - 2, } };
+#endif
+	TPMT_TK_CREATION creation_ticket = { 0, };
 	TPM2_HANDLE obj_handle;
 	uint8_t owner_auth[sizeof(TPMU_HA)];
 	unsigned int owner_auth_size = sizeof(owner_auth);
@@ -318,7 +399,7 @@ cryptfs_tpm2_create_passphrase(char *passphrase, size_t passphrase_size,
 
 		creation_pcrs.count = 1;
 		creation_pcrs.pcrSelections->hash = pcr_bank_alg;
-		creation_pcrs.pcrSelections->sizeofSelect = TPM2_PCR_SELECT_MAX;
+		creation_pcrs.pcrSelections->sizeofSelect = 3;
 		memset(creation_pcrs.pcrSelections->pcrSelect, 0,
 		       TPM2_PCR_SELECT_MAX);
 		creation_pcrs.pcrSelections->pcrSelect[pcr_index / 8] |=
@@ -332,7 +413,11 @@ cryptfs_tpm2_create_passphrase(char *passphrase, size_t passphrase_size,
 		name_alg = pcr_bank_alg;
 	} else {
 		creation_pcrs.count = 0;
+#ifndef TSS2_LEGACY_V1
 		policy_digest.size = 0;
+#else
+		policy_digest.t.size = 0;
+#endif
 		name_alg = TPM2_ALG_SHA1;
 	}
 
@@ -370,6 +455,7 @@ cryptfs_tpm2_create_passphrase(char *passphrase, size_t passphrase_size,
 
 	TPM2B_SENSITIVE_CREATE in_sensitive;
 
+#ifndef TSS2_LEGACY_V1
 	in_sensitive.sensitive.userAuth.size = secret_size;
 	memcpy(in_sensitive.sensitive.userAuth.buffer,
 	       secret, in_sensitive.sensitive.userAuth.size);
@@ -378,12 +464,28 @@ cryptfs_tpm2_create_passphrase(char *passphrase, size_t passphrase_size,
 	memcpy(in_sensitive.sensitive.data.buffer, passphrase,
 	       passphrase_size);
 
-	TPM2B_DATA outside_info = { .size = 0 };
-	TPM2B_CREATION_DATA creation_data = { .size = 0 };
-	TPM2B_DIGEST creation_hash = { .size = sizeof(TPM2B_DIGEST) - 2 };
-	TPMT_TK_CREATION creation_ticket = { .tag = 0 };
-	TPM2B_PUBLIC out_public = { .size = 0 };
-	TPM2B_PRIVATE out_private = { .size = sizeof(TPM2B_PRIVATE) - 2 };
+	TPM2B_DATA outside_info = { 0, };
+	TPM2B_CREATION_DATA creation_data = { 0, };
+	TPM2B_DIGEST creation_hash = { sizeof(TPM2B_DIGEST) - 2, };
+	TPMT_TK_CREATION creation_ticket = { 0, };
+	TPM2B_PUBLIC out_public = { 0, };
+	TPM2B_PRIVATE out_private = { sizeof(TPM2B_PRIVATE) - 2, };
+#else
+	in_sensitive.t.sensitive.userAuth.t.size = secret_size;
+	memcpy(in_sensitive.t.sensitive.userAuth.t.buffer,
+	       secret, in_sensitive.t.sensitive.userAuth.t.size);
+	in_sensitive.t.size = in_sensitive.t.sensitive.userAuth.t.size + 2;
+	in_sensitive.t.sensitive.data.t.size = passphrase_size;
+	memcpy(in_sensitive.t.sensitive.data.t.buffer, passphrase,
+	       passphrase_size);
+
+	TPM2B_DATA outside_info = { { 0, } };
+	TPM2B_CREATION_DATA creation_data = { { 0, } };
+	TPM2B_DIGEST creation_hash = { { sizeof(TPM2B_DIGEST) - 2, } };
+	TPMT_TK_CREATION creation_ticket = { 0, };
+	TPM2B_PUBLIC out_public = { { 0, } };
+	TPM2B_PRIVATE out_private = { { sizeof(TPM2B_PRIVATE) - 2, } };
+#endif
 	struct session_complex s;
 
 re_auth_pkey:
@@ -424,7 +526,11 @@ redo:
 
 	dbg("Preparing to load the passphrase object ...\n");
 
-	TPM2B_NAME name_ext = { .size = sizeof(TPM2B_NAME) - 2 };
+#ifndef TSS2_LEGACY_V1
+	TPM2B_NAME name_ext = { sizeof(TPM2B_NAME) - 2, };
+#else
+	TPM2B_NAME name_ext = { { sizeof(TPM2B_NAME) - 2, } };
+#endif
 	TPM2_HANDLE obj_handle;
 
 	rc = Tss2_Sys_Load(cryptfs_tpm2_sys_context,

@@ -1,6 +1,7 @@
 CROSS_COMPILE ?=
 CC := $(CROSS_COMPILE)gcc
 LD := $(CROSS_COMPILE)ld
+CCLD := $(CROSS_COMPILE)gcc
 AR := $(CROSS_COMPILE)ar
 INSTALL ?= install
 PKG_CONFIG ?= pkg-config
@@ -9,6 +10,7 @@ EXTRA_CFLAGS ?=
 EXTRA_LDFLAGS ?=
 
 DEBUG_BUILD ?=
+TSS2_VER ?= 2
 prefix ?= /usr/local
 libdir ?= $(prefix)/lib
 sbindir ?= $(prefix)/sbin
@@ -40,8 +42,13 @@ CFLAGS := -D_GNU_SOURCE -std=gnu99 -O2 -Wall -Werror \
 	  $(addprefix $(join -L,), $(tpm2_tss_libdir)) \
 	  `$(PKG_CONFIG) --cflags glib-2.0` \
 	  `$(PKG_CONFIG) --libs glib-2.0` \
-	  -ldl -ltss2-sys -ltss2-tcti-mssim -ltss2-tcti-device \
 	  $(EXTRA_CFLAGS) $(addprefix $(join -Wl,,),$(LDFLAGS))
+
+ifneq ($(TSS2_VER), 1)
+	CFLAGS += -ldl -ltss2-sys -ltss2-tcti-mssim -ltss2-tcti-device
+else
+	CFLAGS += -ldl -lsapi -ltcti-socket -ltcti-device -DTSS2_LEGACY_V1
+endif
 
 ifneq ($(DEBUG_BUILD),)
 	CFLAGS += -ggdb -DDEBUG

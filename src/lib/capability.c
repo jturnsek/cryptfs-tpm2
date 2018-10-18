@@ -50,7 +50,7 @@ capability_read_public(TPMI_DH_OBJECT handle, TPM2B_PUBLIC *public_out)
 
 	UINT32 rc = Tss2_Sys_GetCapability(cryptfs_tpm2_sys_context, NULL,
 					   TPM2_CAP_HANDLES, TPM2_HT_PERSISTENT,
-          				   TPM2_PT_TPM2_HR_PERSISTENT, &more_data,
+					   TPM2_PT_TPM2_HR_PERSISTENT, &more_data,
 					   &capability_data, NULL);
 	if (rc != TPM2_RC_SUCCESS) {
 		err("Unable to get the TPM persistent handles (%#x)", rc);
@@ -70,9 +70,13 @@ capability_read_public(TPMI_DH_OBJECT handle, TPM2B_PUBLIC *public_out)
         	struct session_complex s;
 		password_session_create(&s, NULL, 0);
 
-		TPM2B_NAME name = { .size = sizeof(TPM2B_NAME)-2 };
-		TPM2B_NAME qualified_name = { .size = sizeof(TPM2B_NAME)-2 };
-
+#ifndef TSS2_LEGACY_V1
+		TPM2B_NAME name = { sizeof(TPM2B_NAME)-2, };
+		TPM2B_NAME qualified_name = { sizeof(TPM2B_NAME)-2, };
+#else
+		TPM2B_NAME name = { { sizeof(TPM2B_NAME)-2, } };
+		TPM2B_NAME qualified_name = { { sizeof(TPM2B_NAME)-2, } };
+#endif
 		rc = Tss2_Sys_ReadPublic(cryptfs_tpm2_sys_context, handle,
 					 NULL, public_out, &name,
 					 &qualified_name, &s.sessionsDataOut);
@@ -268,8 +272,12 @@ cryptfs_tpm2_capability_digest_algorithm_supported(TPMI_ALG_HASH *hash_alg)
 	for (i = 0; i < algs->count; ++i) {
 		TPMS_ALG_PROPERTY alg_property = algs->algProperties[i];
 		unsigned alg_weight;
+#ifndef TSS2_LEGACY_V1
+		if (!(alg_property.algProperties & TPMA_ALGORITHM_HASH ))
 
-		if (alg_property.algProperties & TPMA_ALGORITHM_HASH)
+#else
+		if (alg_property.algProperties.hash != 1)
+#endif
 			continue;
 
 		if (*hash_alg == alg_property.alg)
@@ -422,7 +430,12 @@ cryptfs_tpm2_capability_in_lockout(bool *in_lockout)
 
 	rc = get_permanent_property(TPM2_PT_PERMANENT, (UINT32 *)&attrs);
 	if (rc == TPM2_RC_SUCCESS) {
+#ifndef TSS2_LEGACY_V1
+
 		*in_lockout = !!(attrs & TPMA_PERMANENT_INLOCKOUT);
+#else
+		*in_lockout = !!attrs.inLockout;
+#endif
 		return EXIT_SUCCESS;
 	}
 
@@ -440,7 +453,12 @@ cryptfs_tpm2_capability_lockout_auth_required(bool *required)
 
 	rc = get_permanent_property(TPM2_PT_PERMANENT, (UINT32 *)&attrs);
 	if (rc == TPM2_RC_SUCCESS) {
+#ifndef TSS2_LEGACY_V1
+
 		*required = !!(attrs & TPMA_PERMANENT_LOCKOUTAUTHSET);
+#else
+		*required = !!attrs.lockoutAuthSet;
+#endif
 		return EXIT_SUCCESS;
 	}
 
@@ -458,7 +476,12 @@ cryptfs_tpm2_capability_owner_auth_required(bool *required)
 
 	rc = get_permanent_property(TPM2_PT_PERMANENT, (UINT32 *)&attrs);
 	if (rc == TPM2_RC_SUCCESS) {
+#ifndef TSS2_LEGACY_V1
+
 		*required = !!(attrs & TPMA_PERMANENT_OWNERAUTHSET);
+#else
+		*required = !!attrs.ownerAuthSet;
+#endif
 		return EXIT_SUCCESS;
 	}
 

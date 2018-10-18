@@ -38,17 +38,25 @@
 static void
 complete_session_complex(struct session_complex *s)
 {
+#ifndef TSS2_LEGACY_V1
 	s->sessionsData.count = 1;
-	s->sessionsData.auths[0] = s->sessionData;
-
 	s->sessionsDataOut.count = 1;
-	s->sessionsDataOut.auths[0] = s->sessionDataOut;
+#else
+	s->sessionDataArray[0] = &s->sessionData;
+	s->sessionsData.cmdAuthsCount = 1;
+	s->sessionsData.cmdAuths = s->sessionDataArray;
+
+	s->sessionDataOutArray[0] = &s->sessionDataOut;
+	s->sessionsDataOut.rspAuthsCount = 1;
+	s->sessionsDataOut.rspAuths = s->sessionDataOutArray;
+#endif
 }
 
 static void
 set_session_auth(TPMS_AUTH_COMMAND *session, TPMI_SH_AUTH_SESSION handle,
 		 void *auth_password, size_t auth_password_size)
 {
+#ifndef TSS2_LEGACY_V1
 	session->sessionHandle = handle;
 	session->nonce.size = 0;
 	*((UINT8 *)((void *)&session->sessionAttributes)) = 0;
@@ -60,6 +68,19 @@ set_session_auth(TPMS_AUTH_COMMAND *session, TPMI_SH_AUTH_SESSION handle,
 		       session->hmac.size);
 	} else
 		session->hmac.size = 0;
+#else
+	session->sessionHandle = handle;
+	session->nonce.size = 0;
+	*((UINT8 *)((void *)&session->sessionAttributes)) = 0;
+	session->sessionAttributes |= TPMA_SESSION_CONTINUESESSION;
+
+	if (auth_password && auth_password_size) {
+		session->hmac.size = auth_password_size;
+		memcpy(session->hmac.buffer, auth_password,
+		       session->hmac.size);
+	} else
+		session->hmac.t.size = 0;
+#endif
 }
 
 static void
@@ -100,19 +121,30 @@ policy_session_create(struct session_complex *s, TPM2_SE type,
 	}
 
 	TPM2B_ENCRYPTED_SECRET salt;
+#ifndef TSS2_LEGACY_V1
 	salt.size = 0;
+#else
+	salt.t.size = 0;
+#endif
 
 	/* No symmetric algorithm */
 	TPMT_SYM_DEF symmetric;
 	symmetric.algorithm = TPM2_ALG_NULL;
 
 	TPM2B_NONCE nonce_caller;
+#ifndef TSS2_LEGACY_V1
 	nonce_caller.size = hash_alg_size;
 	memset(nonce_caller.buffer, 0, nonce_caller.size);
-
+#else
+	nonce_caller.t.size = hash_alg_size;
+	memset(nonce_caller.t.buffer, 0, nonce_caller.t.size);
+#endif
 	TPM2B_NONCE nonce_tpm;
+#ifndef TSS2_LEGACY_V1
 	nonce_tpm.size = nonce_caller.size;
-
+#else
+	nonce_tpm.t.size = nonce_caller.t.size;
+#endif
 	UINT32 rc = Tss2_Sys_StartAuthSession(cryptfs_tpm2_sys_context,
 					      TPM2_RH_NULL, TPM2_RH_NULL, NULL,
 					      &nonce_caller, &salt,
@@ -154,8 +186,11 @@ void
 password_session_create(struct session_complex *s, char *auth_password,
 			unsigned int auth_password_size)
 {
+#ifndef TSS2_LEGACY_V1
+	set_password_auth(&s->sessionsData.auths[0], auth_password, auth_password_size);
+#else
 	set_password_auth(&s->sessionData, auth_password, auth_password_size);
-
+#endif
 	s->session_handle = TPM2_RS_PW;
 
 	complete_session_complex(s);

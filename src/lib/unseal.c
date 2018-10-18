@@ -58,7 +58,7 @@ redo:
 
 		pcrs.count = 1;
 		pcrs.pcrSelections->hash = pcr_bank_alg;
-		pcrs.pcrSelections->sizeofSelect = TPM2_PCR_SELECT_MAX;
+		pcrs.pcrSelections->sizeofSelect = 3;
 		memset(pcrs.pcrSelections->pcrSelect, 0, TPM2_PCR_SELECT_MAX);
 		pcrs.pcrSelections->pcrSelect[pcr_index / 8] |=
 			(1 << (pcr_index % 8));
@@ -75,13 +75,21 @@ redo:
 		}
 
 		/* TODO: move this call to policy_session_create() */
+#ifndef TSS2_LEGACY_V1
+		policy_auth_set(&s.sessionsData.auths[0], s.session_handle,
+				(char *)secret, secret_size);
+#else
 		policy_auth_set(&s.sessionData, s.session_handle,
 				(char *)secret, secret_size);
+#endif
 	} else
 		password_session_create(&s, (char *)secret, secret_size);
 
-	TPM2B_SENSITIVE_DATA out_data = { .size = sizeof(TPM2B_SENSITIVE_DATA)-2 };
-
+#ifndef TSS2_LEGACY_V1
+	TPM2B_SENSITIVE_DATA out_data = { sizeof(TPM2B_SENSITIVE_DATA)-2, };
+#else
+	TPM2B_SENSITIVE_DATA out_data = { { sizeof(TPM2B_SENSITIVE_DATA)-2, } };
+#endif
 	UINT32 rc;
 
 	rc = Tss2_Sys_Unseal(cryptfs_tpm2_sys_context,
@@ -112,6 +120,7 @@ redo:
 		return -1;
 	}
 
+#ifndef TSS2_LEGACY_V1
 	info("Succeed to unseal the passphrase (%d-byte)\n", out_data.size);
 
 	*passphrase = malloc(out_data.size);
@@ -120,6 +129,15 @@ redo:
 
 	memcpy(*passphrase, out_data.buffer, out_data.size);
 	*passphrase_size = out_data.size;
+#else
+	info("Succeed to unseal the passphrase (%d-byte)\n", out_data.t.size);
 
+	*passphrase = malloc(out_data.size);
+	if (!*passphrase)
+		return -1;
+
+	memcpy(*passphrase, out_data.t.buffer, out_data.t.size);
+	*passphrase_size = out_data.t.size;
+#endif
 	return 0;
 }

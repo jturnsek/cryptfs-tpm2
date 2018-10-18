@@ -41,15 +41,24 @@ tpm_hash(TPMI_ALG_HASH hash_alg, BYTE *data, UINT16 data_len,
 {
 	TPM2B_MAX_BUFFER data_buf;
 
+#ifndef TSS2_LEGACY_V1 
 	if (data_len > sizeof(data_buf.buffer)) {
+#else
+	if (data_len > sizeof(data_buf.t.buffer)) {
+#endif
 		err("The data to be hashed is too large\n");
 		return -1;
 	}
 
+#ifndef TSS2_LEGACY_V1 
 	data_buf.size = data_len;
 	memcpy(data_buf.buffer, data, data_len);
-
-	TPM2B_DIGEST digest = { .size = hash_size };
+	TPM2B_DIGEST digest = { hash_size, };
+#else
+	data_buf.t.size = data_len;
+	memcpy(data_buf.t.buffer, data, data_len);
+	TPM2B_DIGEST digest = { { hash_size, } };
+#endif
 
 	UINT32 rc = Tss2_Sys_Hash(cryptfs_tpm2_sys_context, NULL, &data_buf,
 				  hash_alg, TPM2_RH_NULL, &digest, NULL,
@@ -59,8 +68,11 @@ tpm_hash(TPMI_ALG_HASH hash_alg, BYTE *data, UINT16 data_len,
 		return -1;
 	}
 
+#ifndef TSS2_LEGACY_V1 
 	memcpy(hash, digest.buffer, hash_size);
-
+#else
+	memcpy(hash, digest.t.buffer, hash_size);
+#endif
 	return 0;
 }
 
